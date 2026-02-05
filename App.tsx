@@ -14,6 +14,7 @@ import SoundMeditationExercise from './components/SoundMeditationExercise';
 import MindfulPhotosExercise from './components/MindfulPhotosExercise';
 import HistoryView from './components/HistoryView';
 import NewsCard from './components/NewsCard';
+import AdBanner from './components/AdBanner';
 import { ExerciseType } from './types';
 import { statsService } from './services/statsService';
 import { translations, Language } from './translations';
@@ -101,7 +102,6 @@ const App: React.FC = () => {
           </Layout>
         );
       case ExerciseType.MEDITATION:
-        // FIX: Replaced undefined onComplete with onExerciseComplete
         return (
           <Layout title={t.meditation.title} onBack={() => setCurrentView(ExerciseType.HOME)} isExerciseActive={isExerciseActive}>
             <MeditationExercise onComplete={onExerciseComplete} />
@@ -220,6 +220,8 @@ const App: React.FC = () => {
               <p className="text-2xl text-center text-slate-400 font-bold">
                 {t.selectEx}
               </p>
+
+              <AdBanner slot="home-top-ad" />
 
               <NewsCard />
             </div>

@@ -24,7 +24,6 @@ const enSteps = [
   { title: 'Colors', text: 'Observe the colors of the object. Notice the different shades, light and dark.', icon: '🎨' },
   { title: 'Texture', text: 'Look at the texture. Does it look smooth? Rough? Shiny?', icon: '🧱' },
   { title: 'Light & Shadow', text: 'Notice how the light hits the object. Where are its shadows?', icon: '💡' },
-  // FIX: Escaped the single quote in "wouldn't" or used double quotes to avoid terminating the string early
   { title: 'Small Details', text: "Look for one tiny detail you wouldn't usually notice.", icon: '🔎' },
   { title: 'Appreciation', text: 'Appreciate the beauty in this simple object just as it is.', icon: '✨' }
 ];
@@ -122,7 +121,22 @@ const MindfulPhotosExercise: React.FC<Props> = ({ onComplete }) => {
             </div>
             <MuteToggle />
           </div>
-          <div className="text-[120px] mb-6 animate-pulse transition-all duration-1000">{activeSteps[stepIndex].icon}</div>
+
+          <div className="relative h-64 w-full flex items-center justify-center mb-6">
+             {/* Viewfinder Corners */}
+             <div className="absolute inset-0 p-4 border-4 border-transparent pointer-events-none">
+                <div className="viewfinder-corner top-0 left-0 border-t-8 border-l-8 rounded-tl-lg"></div>
+                <div className="viewfinder-corner top-0 right-0 border-t-8 border-r-8 rounded-tr-lg"></div>
+                <div className="viewfinder-corner bottom-0 left-0 border-b-8 border-l-8 rounded-bl-lg"></div>
+                <div className="viewfinder-corner bottom-0 right-0 border-b-8 border-r-8 rounded-br-lg"></div>
+             </div>
+             
+             {/* Animated Icon */}
+             <div key={stepIndex} className="text-[120px] animate-shutter">
+               {activeSteps[stepIndex].icon}
+             </div>
+          </div>
+
           <h3 className="text-4xl font-bold text-slate-300 mb-6">{activeSteps[stepIndex].title}</h3>
           <p className="text-3xl leading-relaxed text-slate-100 mb-10 min-h-[140px] flex items-center justify-center">
             {activeSteps[stepIndex].text}

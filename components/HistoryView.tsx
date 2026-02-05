@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { statsService, HistoryEntry } from '../services/statsService';
 import { translations, Language } from '../translations';
 import { ttsService } from '../services/ttsService';
+import AdBanner from './AdBanner';
 
 interface Props {
   onBack: () => void;
@@ -38,7 +39,7 @@ const HistoryView: React.FC<Props> = ({ onBack }) => {
   };
 
   return (
-    <div className="w-full max-w-2xl px-4 flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
+    <div className="w-full max-w-2xl px-4 flex flex-col gap-6 animate-in fade-in slide-in-from-bottom-4 duration-500 pb-10">
       <div className="flex items-center justify-between mb-2">
         <h2 className="text-4xl font-bold text-emerald-400">{t.history}</h2>
         {history.length > 0 && (
@@ -80,6 +81,8 @@ const HistoryView: React.FC<Props> = ({ onBack }) => {
           ))}
         </div>
       )}
+
+      <AdBanner slot="history-bottom-ad" />
 
       <button 
         onClick={onBack}

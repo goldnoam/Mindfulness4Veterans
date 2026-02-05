@@ -3,20 +3,30 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --app-font-scale: 1;
+}
+
 @layer base {
   html {
     @apply h-full overflow-x-hidden transition-colors duration-500;
     scroll-behavior: smooth;
+    font-size: calc(16px * var(--app-font-scale));
   }
   body {
     @apply bg-slate-950 text-slate-50 antialiased overflow-x-hidden select-none min-h-screen transition-colors duration-500;
-    font-family: 'Assistant', 'Assistant', sans-serif;
+    font-family: 'Assistant', sans-serif;
   }
   
   /* Light Theme Overrides */
   .light-theme {
     @apply bg-slate-50 text-slate-900;
   }
+
+  /* Global Font Size Scale Classes */
+  .font-scale-small { --app-font-scale: 0.85; }
+  .font-scale-medium { --app-font-scale: 1; }
+  .font-scale-large { --app-font-scale: 1.25; }
 }
 
 @layer components {
@@ -76,6 +86,21 @@
   @keyframes pulse-shine {
     0%, 100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0.2; }
     50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.5; }
+  }
+
+  /* Shutter and Viewfinder Animations */
+  .animate-shutter {
+    animation: shutter 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+
+  @keyframes shutter {
+    0% { transform: scale(0.5) rotate(-10deg); opacity: 0; }
+    50% { transform: scale(1.1) rotate(5deg); opacity: 1; }
+    100% { transform: scale(1) rotate(0deg); opacity: 1; }
+  }
+
+  .viewfinder-corner {
+    @apply absolute w-8 h-8 border-slate-500 opacity-40;
   }
 
   /* Accessibility focus states - high visibility for seniors */
