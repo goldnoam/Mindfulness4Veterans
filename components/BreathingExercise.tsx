@@ -76,7 +76,9 @@ const BreathingExercise: React.FC<Props> = ({ onComplete }) => {
     setDurationMins(mins);
     setTimeLeft(mins * 60);
     setIsActive(true);
+    setCyclesDone(0);
     runPhase('inhale');
+    if (countdownRef.current) clearInterval(countdownRef.current);
     countdownRef.current = window.setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
@@ -94,6 +96,13 @@ const BreathingExercise: React.FC<Props> = ({ onComplete }) => {
     setIsActive(false);
     setPhase('ready');
     ttsService.stop();
+  };
+
+  const restartExercise = () => {
+    if (timerRef.current) clearTimeout(timerRef.current);
+    if (countdownRef.current) clearInterval(countdownRef.current);
+    ttsService.stop();
+    startExercise(durationMins);
   };
 
   useEffect(() => {
@@ -167,7 +176,10 @@ const BreathingExercise: React.FC<Props> = ({ onComplete }) => {
             <h3 className="text-4xl font-bold text-emerald-400 mb-2 drop-shadow-lg" aria-live="polite">{getPhaseText()}</h3>
           </div>
           
-          <div className="flex flex-col gap-6 mt-8 w-full px-4">
+          <div className="flex flex-col gap-6 mt-8 w-full px-4 items-center">
+             <button onClick={restartExercise} className="bg-slate-800 border-4 border-emerald-500/50 text-emerald-400 px-10 py-4 rounded-3xl text-2xl font-bold shadow-xl active:scale-95 transition-all">
+               🔄 {t.restart}
+             </button>
              <button onClick={stopEarly} className="text-2xl text-slate-500 hover:text-emerald-400 underline font-bold transition-colors active:scale-95">
               {t.back}
             </button>

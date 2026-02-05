@@ -9,6 +9,9 @@ import VisualizationExercise from './components/VisualizationExercise';
 import BodyScanExercise from './components/BodyScanExercise';
 import MindfulEatingExercise from './components/MindfulEatingExercise';
 import WalkingMeditationExercise from './components/WalkingMeditationExercise';
+import MindfulMovementExercise from './components/MindfulMovementExercise';
+import SoundMeditationExercise from './components/SoundMeditationExercise';
+import MindfulPhotosExercise from './components/MindfulPhotosExercise';
 import HistoryView from './components/HistoryView';
 import NewsCard from './components/NewsCard';
 import { ExerciseType } from './types';
@@ -24,7 +27,6 @@ const App: React.FC = () => {
 
   useEffect(() => {
     setStars(statsService.getStars());
-    // Listen for language changes from Layout (synced via localStorage in Layout)
     const interval = setInterval(() => {
       const storedLang = localStorage.getItem('lang') as Language;
       if (storedLang && storedLang !== lang) setLang(storedLang);
@@ -32,7 +34,6 @@ const App: React.FC = () => {
     return () => clearInterval(interval);
   }, [lang]);
 
-  // Refresh stars whenever we return to the Home screen
   useEffect(() => {
     if (currentView === ExerciseType.HOME) {
       setStars(statsService.getStars());
@@ -50,6 +51,9 @@ const App: React.FC = () => {
     { id: ExerciseType.BODY_SCAN, ...t.bodyScan, color: 'border-indigo-500', bg: 'bg-indigo-500/10' },
     { id: ExerciseType.MINDFUL_EATING, ...t.eating, color: 'border-orange-500', bg: 'bg-orange-500/10' },
     { id: ExerciseType.WALKING_MEDITATION, ...t.walking, color: 'border-lime-500', bg: 'bg-lime-500/10' },
+    { id: ExerciseType.MINDFUL_MOVEMENT, ...t.movement, color: 'border-teal-500', bg: 'bg-teal-500/10' },
+    { id: ExerciseType.SOUND_MEDITATION, ...t.soundMed, color: 'border-violet-500', bg: 'bg-violet-500/10' },
+    { id: ExerciseType.MINDFUL_PHOTOS, ...t.photos, color: 'border-slate-500', bg: 'bg-slate-500/10' },
   ];
 
   const onExerciseComplete = () => {
@@ -97,6 +101,7 @@ const App: React.FC = () => {
           </Layout>
         );
       case ExerciseType.MEDITATION:
+        // FIX: Replaced undefined onComplete with onExerciseComplete
         return (
           <Layout title={t.meditation.title} onBack={() => setCurrentView(ExerciseType.HOME)} isExerciseActive={isExerciseActive}>
             <MeditationExercise onComplete={onExerciseComplete} />
@@ -124,6 +129,24 @@ const App: React.FC = () => {
         return (
           <Layout title={t.walking.title} onBack={() => setCurrentView(ExerciseType.HOME)} isExerciseActive={isExerciseActive}>
             <WalkingMeditationExercise onComplete={onExerciseComplete} />
+          </Layout>
+        );
+      case ExerciseType.MINDFUL_MOVEMENT:
+        return (
+          <Layout title={t.movement.title} onBack={() => setCurrentView(ExerciseType.HOME)} isExerciseActive={isExerciseActive}>
+            <MindfulMovementExercise onComplete={onExerciseComplete} />
+          </Layout>
+        );
+      case ExerciseType.SOUND_MEDITATION:
+        return (
+          <Layout title={t.soundMed.title} onBack={() => setCurrentView(ExerciseType.HOME)} isExerciseActive={isExerciseActive}>
+            <SoundMeditationExercise onComplete={onExerciseComplete} />
+          </Layout>
+        );
+      case ExerciseType.MINDFUL_PHOTOS:
+        return (
+          <Layout title={t.photos.title} onBack={() => setCurrentView(ExerciseType.HOME)} isExerciseActive={isExerciseActive}>
+            <MindfulPhotosExercise onComplete={onExerciseComplete} />
           </Layout>
         );
       case ExerciseType.HOME:

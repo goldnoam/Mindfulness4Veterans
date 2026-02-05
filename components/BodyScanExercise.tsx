@@ -51,6 +51,7 @@ const BodyScanExercise: React.FC<Props> = ({ onComplete }) => {
 
     const partInterval = Math.floor(totalSeconds / (activeParts.length + 1));
 
+    if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = window.setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
@@ -69,6 +70,12 @@ const BodyScanExercise: React.FC<Props> = ({ onComplete }) => {
         return prev - 1;
       });
     }, 1000);
+  };
+
+  const restartExercise = () => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    ttsService.stop();
+    startExercise(durationMins);
   };
 
   const handleFinish = () => {
@@ -150,12 +157,20 @@ const BodyScanExercise: React.FC<Props> = ({ onComplete }) => {
         {currentPartIndex === -1 ? (lang === 'he' ? 'שימו לב לנשימה' : 'Observe your breath') : activeParts[currentPartIndex].prompt}
       </p>
 
-      <button 
-        onClick={stopEarly}
-        className="text-2xl text-indigo-400 underline font-bold mt-4"
-      >
-        {t.back}
-      </button>
+      <div className="flex flex-col gap-4 items-center">
+        <button 
+          onClick={restartExercise}
+          className="bg-slate-800 border-4 border-indigo-500/50 text-indigo-400 px-10 py-4 rounded-3xl text-2xl font-bold shadow-xl active:scale-95 transition-all"
+        >
+          🔄 {t.restart}
+        </button>
+        <button 
+          onClick={stopEarly}
+          className="text-2xl text-indigo-400 underline font-bold mt-4"
+        >
+          {t.back}
+        </button>
+      </div>
     </div>
   );
 };

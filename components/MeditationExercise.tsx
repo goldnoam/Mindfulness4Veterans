@@ -28,6 +28,7 @@ const MeditationExercise: React.FC<Props> = ({ onComplete }) => {
     
     ttsService.speak(lang === 'he' ? "מצאו תנוחה נוחה. עצמו עיניים בנחת." : "Find a comfortable position. Close your eyes gently.");
     
+    if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = window.setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
@@ -60,6 +61,12 @@ const MeditationExercise: React.FC<Props> = ({ onComplete }) => {
     setIsActive(false);
     setIsFinished(false);
     ttsService.stop();
+  };
+
+  const restartExercise = () => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    ttsService.stop();
+    startMeditation(selectedDuration);
   };
 
   useEffect(() => {
@@ -119,12 +126,17 @@ const MeditationExercise: React.FC<Props> = ({ onComplete }) => {
             <p className="text-4xl font-bold text-purple-400 mb-4">{lang === 'he' ? 'פשוט להיות...' : 'Just be...'}</p>
           </div>
 
-          <button 
-            onClick={stopEarly}
-            className="text-2xl text-purple-400 underline font-medium mt-4 active:scale-95"
-          >
-            {t.back}
-          </button>
+          <div className="flex flex-col gap-4 items-center">
+            <button onClick={restartExercise} className="bg-slate-800 border-4 border-purple-500/50 text-purple-400 px-10 py-4 rounded-3xl text-2xl font-bold shadow-xl active:scale-95 transition-all">
+               🔄 {t.restart}
+             </button>
+            <button 
+              onClick={stopEarly}
+              className="text-2xl text-purple-400 underline font-medium mt-4 active:scale-95"
+            >
+              {t.back}
+            </button>
+          </div>
         </div>
       )}
     </div>

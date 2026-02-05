@@ -63,6 +63,7 @@ const MindfulEatingExercise: React.FC<Props> = ({ onComplete }) => {
     setStepIndex(0);
     ttsService.speak(activeSteps[0].text);
     
+    if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = window.setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
@@ -73,6 +74,12 @@ const MindfulEatingExercise: React.FC<Props> = ({ onComplete }) => {
         return prev - 1;
       });
     }, 1000);
+  };
+
+  const restartExercise = () => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    ttsService.stop();
+    startExercise(durationMins);
   };
 
   const handleFinish = () => {
@@ -125,9 +132,17 @@ const MindfulEatingExercise: React.FC<Props> = ({ onComplete }) => {
           <p className="text-3xl leading-relaxed text-slate-100 mb-10 min-h-[140px] flex items-center justify-center">
             {activeSteps[stepIndex].text}
           </p>
-          <button onClick={nextStep} className="w-full bg-orange-600 text-white text-3xl font-bold py-6 rounded-3xl shadow-lg active:scale-95 border-b-8 border-orange-800">
-            {stepIndex === activeSteps.length - 1 ? t.done : t.next}
-          </button>
+          <div className="flex flex-col gap-4">
+            <button onClick={nextStep} className="w-full bg-orange-600 text-white text-3xl font-bold py-6 rounded-3xl shadow-lg active:scale-95 border-b-8 border-orange-800">
+              {stepIndex === activeSteps.length - 1 ? t.done : t.next}
+            </button>
+            <button 
+              onClick={restartExercise}
+              className="mt-4 bg-slate-800 border-4 border-orange-500/50 text-orange-400 px-10 py-4 rounded-3xl text-2xl font-bold shadow-xl active:scale-95 transition-all"
+            >
+              🔄 {t.restart}
+            </button>
+          </div>
         </div>
       )}
     </div>

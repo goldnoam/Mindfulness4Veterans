@@ -55,6 +55,7 @@ const GratitudeExercise: React.FC<Props> = ({ onComplete }) => {
     setTimeLeft(mins * 60);
     setIsActive(true);
     getRandomPrompt();
+    if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = window.setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
@@ -78,6 +79,12 @@ const GratitudeExercise: React.FC<Props> = ({ onComplete }) => {
     statsService.addStar();
     statsService.addToHistory(t.gratitude.title, '🙏', selectedMins * 60);
     setIsFinished(true);
+  };
+
+  const restartExercise = () => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    ttsService.stop();
+    startExercise(selectedMins);
   };
 
   useEffect(() => {
@@ -133,6 +140,9 @@ const GratitudeExercise: React.FC<Props> = ({ onComplete }) => {
               >
                 {lang === 'he' ? 'נושא אחר' : 'Next prompt'}
               </button>
+              <button onClick={restartExercise} className="mt-4 bg-slate-800 border-4 border-amber-500/50 text-amber-400 px-10 py-4 rounded-3xl text-2xl font-bold shadow-xl active:scale-95 transition-all">
+                 🔄 {t.restart}
+               </button>
           </div>
         </div>
       )}

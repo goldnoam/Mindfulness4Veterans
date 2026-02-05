@@ -59,6 +59,7 @@ const SensesExercise: React.FC<Props> = ({ onComplete }) => {
     setStepIndex(0);
     ttsService.speak(activeSteps[0].text);
     
+    if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = window.setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
@@ -69,6 +70,12 @@ const SensesExercise: React.FC<Props> = ({ onComplete }) => {
         return prev - 1;
       });
     }, 1000);
+  };
+
+  const restartExercise = () => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    ttsService.stop();
+    startExercise(selectedDuration);
   };
 
   const handleFinish = () => {
@@ -117,12 +124,20 @@ const SensesExercise: React.FC<Props> = ({ onComplete }) => {
           <p className="text-3xl leading-relaxed text-slate-200 mb-10 min-h-[120px]">
             {activeSteps[stepIndex].text}
           </p>
-          <button 
-            onClick={nextStep}
-            className="w-full bg-blue-600 text-white text-3xl font-bold py-6 rounded-3xl shadow-lg active:scale-95 border-b-8 border-blue-800"
-          >
-            {stepIndex < activeSteps.length - 1 ? t.next : t.done}
-          </button>
+          <div className="flex flex-col gap-4">
+            <button 
+              onClick={nextStep}
+              className="w-full bg-blue-600 text-white text-3xl font-bold py-6 rounded-3xl shadow-lg active:scale-95 border-b-8 border-blue-800"
+            >
+              {stepIndex < activeSteps.length - 1 ? t.next : t.done}
+            </button>
+            <button 
+              onClick={restartExercise}
+              className="mt-4 bg-slate-800 border-4 border-blue-500/50 text-blue-400 px-10 py-4 rounded-3xl text-2xl font-bold shadow-xl active:scale-95 transition-all"
+            >
+              🔄 {t.restart}
+            </button>
+          </div>
         </div>
       )}
     </div>

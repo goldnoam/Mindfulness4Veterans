@@ -89,6 +89,7 @@ const VisualizationExercise: React.FC<Props> = ({ onComplete }) => {
     const title = lang === 'he' ? sceneData.titleHe : sceneData.titleEn;
     ttsService.speak(lang === 'he' ? `בואו נצא למסע דמיוני אל ${title}. עיצמו עיניים בנחת.` : `Let's go on an imaginary journey to ${title}. Close your eyes gently.`);
 
+    if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = window.setInterval(() => {
       setTimeLeft((prev) => {
         if (prev <= 1) {
@@ -111,6 +112,12 @@ const VisualizationExercise: React.FC<Props> = ({ onComplete }) => {
         return prev - 1;
       });
     }, 1000);
+  };
+
+  const restartExercise = () => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    ttsService.stop();
+    startExercise();
   };
 
   const handleFinish = () => {
@@ -203,12 +210,20 @@ const VisualizationExercise: React.FC<Props> = ({ onComplete }) => {
         <h3 className="text-4xl font-bold text-cyan-400 mb-2">{lang === 'he' ? scenes[selectedScene].titleHe : scenes[selectedScene].titleEn}</h3>
       </div>
 
-      <button 
-        onClick={stopEarly}
-        className="text-2xl text-cyan-400 underline font-bold mt-4"
-      >
-        {t.back}
-      </button>
+      <div className="flex flex-col gap-4 items-center">
+        <button 
+          onClick={restartExercise}
+          className="bg-slate-800 border-4 border-cyan-500/50 text-cyan-400 px-10 py-4 rounded-3xl text-2xl font-bold shadow-xl active:scale-95 transition-all"
+        >
+          🔄 {t.restart}
+        </button>
+        <button 
+          onClick={stopEarly}
+          className="text-2xl text-cyan-400 underline font-bold mt-4"
+        >
+          {t.back}
+        </button>
+      </div>
     </div>
   );
 };

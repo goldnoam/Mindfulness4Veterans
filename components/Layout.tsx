@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import MusicPlayer from './MusicPlayer';
+import AmbientSelector from './AmbientSelector';
 import { translations, Language } from '../translations';
 import { ttsService } from '../services/ttsService';
 
@@ -18,6 +19,7 @@ const Layout: React.FC<LayoutProps> = ({ title, onBack, children, isExerciseActi
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [lang, setLang] = useState<Language>((localStorage.getItem('lang') as Language) || 'he');
   const [fontSize, setFontSize] = useState<FontSizeClass>((localStorage.getItem('fontSize') as FontSizeClass) || 'text-2xl');
+  // Reinforced dark theme as default
   const [theme, setTheme] = useState<ThemeType>((localStorage.getItem('theme') as ThemeType) || 'dark');
   const [showSettings, setShowSettings] = useState(false);
 
@@ -53,6 +55,12 @@ const Layout: React.FC<LayoutProps> = ({ title, onBack, children, isExerciseActi
     }
   };
 
+  const toggleTheme = () => {
+    const nextTheme = theme === 'dark' ? 'light' : 'dark';
+    setTheme(nextTheme);
+    speakText(nextTheme === 'dark' ? t.dark : t.light);
+  };
+
   const speakText = (text: string) => {
     ttsService.speak(text);
   };
@@ -70,28 +78,41 @@ const Layout: React.FC<LayoutProps> = ({ title, onBack, children, isExerciseActi
               {t.back}
             </button>
           ) : (
-            <button 
-              onClick={() => { speakText(t.settings); setShowSettings(!showSettings); }}
-              className={`${theme === 'dark' ? 'bg-slate-800' : 'bg-white'} border-4 ${showSettings ? 'border-emerald-500' : 'border-slate-300'} p-5 rounded-3xl text-4xl transition-all shadow-2xl active:scale-95 hover:opacity-80`}
-              aria-label={t.settings}
-            >
-              ⚙️
-            </button>
+            <div className="flex items-center gap-4">
+              <button 
+                onClick={() => { speakText(t.settings); setShowSettings(!showSettings); }}
+                className={`${theme === 'dark' ? 'bg-slate-800' : 'bg-white'} border-4 ${showSettings ? 'border-emerald-500' : 'border-slate-300'} p-5 rounded-3xl text-4xl transition-all shadow-2xl active:scale-95 hover:opacity-80`}
+                aria-label={t.settings}
+              >
+                ⚙️
+              </button>
+              {/* Theme Toggle Switcher Button */}
+              <button 
+                onClick={toggleTheme}
+                className={`${theme === 'dark' ? 'bg-slate-800' : 'bg-white'} border-4 border-slate-300 p-5 rounded-3xl text-3xl hover:border-emerald-500 transition-all shadow-xl active:scale-95`}
+                aria-label="Toggle Theme"
+              >
+                {theme === 'dark' ? '🌙' : '☀️'}
+              </button>
+            </div>
           )}
           <h1 className="text-4xl md:text-6xl font-extrabold text-emerald-500 text-center flex-1 drop-shadow-sm">
             {title}
           </h1>
         </div>
         
-        <div className="flex items-center gap-6">
-          <button 
-            onClick={toggleFullscreen}
-            className={`${theme === 'dark' ? 'bg-slate-800' : 'bg-white'} border-4 border-slate-300 p-5 rounded-3xl text-3xl hover:border-emerald-500 transition-all shadow-xl active:scale-95`}
-            aria-label="Toggle Fullscreen"
-          >
-            {isFullscreen ? '📺' : '🖥️'}
-          </button>
-          <MusicPlayer />
+        <div className="flex items-center gap-6 flex-wrap justify-center">
+          <AmbientSelector />
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={toggleFullscreen}
+              className={`${theme === 'dark' ? 'bg-slate-800' : 'bg-white'} border-4 border-slate-300 p-5 rounded-3xl text-3xl hover:border-emerald-500 transition-all shadow-xl active:scale-95`}
+              aria-label="Toggle Fullscreen"
+            >
+              {isFullscreen ? '📺' : '🖥️'}
+            </button>
+            <MusicPlayer />
+          </div>
         </div>
       </header>
 

@@ -14,7 +14,7 @@ const heSteps = [
   { title: 'עמידה יציבה', text: 'עימדו במקום נוח עם מרחב הליכה קטן לפניכם. הרגישו את כפות הרגליים יציבות על הקרקע.', icon: '🧍' },
   { title: 'נשימה מודעת', text: 'קחו נשימה עמוקה. שימו לב איך הגוף מרגיש כשהוא נינוח ויציב.', icon: '🌬️' },
   { title: 'צעד ראשון', text: 'התחילו ללכת לאט מאוד. שימו לב איך העקב נוגע ברצפה קודם, ואז כף הרגל כולה.', icon: '👣' },
-  { title: 'תנועת הגוף', text: 'שימו לב למשקל שעובר מרגל לרגל. הרגישו את התנועה של הברכיים והירכיים.', icon: '🚶' },
+  { title: 'תנועת הגוף', text: 'שימו לב לממשקל שעובר מרגל לרגל. הרגישו את התנועה של הברכיים והירכיים.', icon: '🚶' },
   { title: 'קצב איטי', text: 'המשיכו ללכת בקצב שמאפשר לכם להרגיש כל תנועה קטנה. הכל בשלווה.', icon: '🐌' },
   { title: 'חיבור לנשימה', text: 'נסו לסנכרן את הצעדים עם הנשימה. צעד אחד בשאיפה, צעד אחד בנשיפה.', icon: '🧘' }
 ];
@@ -51,6 +51,7 @@ const WalkingMeditationExercise: React.FC<Props> = ({ onComplete }) => {
     setStepIndex(0);
     ttsService.speak(activeSteps[0].text);
     
+    if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = window.setInterval(() => {
       setTimeLeft(prev => {
         if (prev <= 1) {
@@ -61,6 +62,12 @@ const WalkingMeditationExercise: React.FC<Props> = ({ onComplete }) => {
         return prev - 1;
       });
     }, 1000);
+  };
+
+  const restartExercise = () => {
+    if (timerRef.current) clearInterval(timerRef.current);
+    ttsService.stop();
+    startExercise(durationMins);
   };
 
   const nextStep = () => {
@@ -125,9 +132,17 @@ const WalkingMeditationExercise: React.FC<Props> = ({ onComplete }) => {
             {activeSteps[stepIndex].text}
           </p>
           
-          <button onClick={nextStep} className="w-full bg-lime-600 text-white text-3xl font-bold py-6 rounded-3xl shadow-lg active:scale-95 border-b-8 border-lime-800">
-            {stepIndex === activeSteps.length - 1 ? t.done : t.next}
-          </button>
+          <div className="flex flex-col gap-4">
+            <button onClick={nextStep} className="w-full bg-lime-600 text-white text-3xl font-bold py-6 rounded-3xl shadow-lg active:scale-95 border-b-8 border-lime-800">
+              {stepIndex === activeSteps.length - 1 ? t.done : t.next}
+            </button>
+            <button 
+              onClick={restartExercise}
+              className="mt-4 bg-slate-800 border-4 border-lime-500/50 text-lime-400 px-10 py-4 rounded-3xl text-2xl font-bold shadow-xl active:scale-95 transition-all"
+            >
+              🔄 {t.restart}
+            </button>
+          </div>
         </div>
       )}
     </div>
