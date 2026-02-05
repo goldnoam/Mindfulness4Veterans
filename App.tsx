@@ -1,5 +1,4 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Layout from './components/Layout';
 import BreathingExercise from './components/BreathingExercise';
 import SensesExercise from './components/SensesExercise';
@@ -12,6 +11,7 @@ import WalkingMeditationExercise from './components/WalkingMeditationExercise';
 import MindfulMovementExercise from './components/MindfulMovementExercise';
 import SoundMeditationExercise from './components/SoundMeditationExercise';
 import MindfulPhotosExercise from './components/MindfulPhotosExercise';
+import WellnessExercise from './components/WellnessExercise';
 import HistoryView from './components/HistoryView';
 import NewsCard from './components/NewsCard';
 import AdBanner from './components/AdBanner';
@@ -25,9 +25,14 @@ const App: React.FC = () => {
   const [stars, setStars] = useState(0);
   const [carouselIndex, setCarouselIndex] = useState(0);
   const [lang, setLang] = useState<Language>('he');
+  const [showStarCelebration, setShowStarCelebration] = useState(false);
+  const prevStarsRef = useRef(0);
 
   useEffect(() => {
-    setStars(statsService.getStars());
+    const initialStars = statsService.getStars();
+    setStars(initialStars);
+    prevStarsRef.current = initialStars;
+    
     const interval = setInterval(() => {
       const storedLang = localStorage.getItem('lang') as Language;
       if (storedLang && storedLang !== lang) setLang(storedLang);
@@ -37,7 +42,13 @@ const App: React.FC = () => {
 
   useEffect(() => {
     if (currentView === ExerciseType.HOME) {
-      setStars(statsService.getStars());
+      const currentStars = statsService.getStars();
+      if (currentStars > prevStarsRef.current) {
+        setShowStarCelebration(true);
+        setTimeout(() => setShowStarCelebration(false), 2000);
+      }
+      setStars(currentStars);
+      prevStarsRef.current = currentStars;
     }
   }, [currentView]);
 
@@ -45,6 +56,7 @@ const App: React.FC = () => {
 
   const exercises = [
     { id: ExerciseType.BREATHING, ...t.breathing, color: 'border-emerald-500', bg: 'bg-emerald-500/10' },
+    { id: ExerciseType.WELLNESS, ...t.wellness, color: 'border-emerald-400', bg: 'bg-emerald-400/10' },
     { id: ExerciseType.SENSES, ...t.senses, color: 'border-blue-500', bg: 'bg-blue-500/10' },
     { id: ExerciseType.GRATITUDE, ...t.gratitude, color: 'border-amber-500', bg: 'bg-amber-500/10' },
     { id: ExerciseType.MEDITATION, ...t.meditation, color: 'border-purple-500', bg: 'bg-purple-500/10' },
@@ -87,6 +99,12 @@ const App: React.FC = () => {
         return (
           <Layout title={t.breathing.title} onBack={() => setCurrentView(ExerciseType.HOME)} isExerciseActive={isExerciseActive}>
             <BreathingExercise onComplete={onExerciseComplete} />
+          </Layout>
+        );
+      case ExerciseType.WELLNESS:
+        return (
+          <Layout title={t.wellness.title} onBack={() => setCurrentView(ExerciseType.HOME)} isExerciseActive={isExerciseActive}>
+            <WellnessExercise onComplete={onExerciseComplete} />
           </Layout>
         );
       case ExerciseType.SENSES:
@@ -156,11 +174,11 @@ const App: React.FC = () => {
           <Layout title={t.title} isExerciseActive={false}>
             <div className="flex flex-col gap-8 w-full px-4 max-w-lg pb-10">
               
-              <div className="flex items-center gap-4">
-                <div className="flex-1 bg-slate-900 border-2 border-slate-800 rounded-[40px] p-6 shadow-xl flex flex-col items-center">
+              <div className="flex items-center gap-4 relative">
+                <div className={`flex-1 bg-slate-900 border-4 ${showStarCelebration ? 'border-amber-500 scale-105 shadow-[0_0_30px_rgba(245,158,11,0.5)]' : 'border-slate-800'} rounded-[40px] p-6 shadow-xl flex flex-col items-center transition-all duration-500`}>
                    <div className="flex items-center gap-4">
-                      <span className="text-6xl star-animate" role="img" aria-label="star" key={stars}>⭐</span>
-                      <span className="text-5xl font-bold text-emerald-400">{stars}</span>
+                      <span className={`text-6xl ${showStarCelebration ? 'star-animate' : ''}`} role="img" aria-label="star" key={stars}>⭐</span>
+                      <span className={`text-5xl font-bold ${showStarCelebration ? 'text-amber-400 scale-125' : 'text-emerald-400'} transition-all`}>{stars}</span>
                    </div>
                    <p className="text-xl text-slate-400 font-bold mt-2 text-center">{t.stars}</p>
                 </div>

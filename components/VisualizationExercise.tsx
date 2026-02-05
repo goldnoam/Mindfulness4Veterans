@@ -2,6 +2,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ttsService } from '../services/ttsService';
 import { statsService } from '../services/statsService';
+import { ambientService, AmbientSoundMode } from '../services/ambientService';
 import CelebrationOverlay from './CelebrationOverlay';
 import MuteToggle from './MuteToggle';
 import { Language, translations } from '../translations';
@@ -12,12 +13,13 @@ interface Props {
 
 type Scene = 'beach' | 'forest' | 'meadow';
 
-const scenes = {
+const scenes: Record<Scene, any> = {
   beach: {
     titleHe: 'חוף הים',
     titleEn: 'The Beach',
     icon: '🏖️',
     color: 'bg-cyan-500',
+    ambientMode: 'waves' as AmbientSoundMode,
     descriptionHe: 'דמיינו את הגלים השקטים ואת החול החם תחת הרגליים.',
     descriptionEn: 'Imagine the quiet waves and the warm sand under your feet.',
     promptsHe: [
@@ -36,6 +38,7 @@ const scenes = {
     titleEn: 'Green Forest',
     icon: '🌲',
     color: 'bg-emerald-600',
+    ambientMode: 'forest' as AmbientSoundMode,
     descriptionHe: 'נשמו את אוויר האורנים הצלול וראו את קרני השמש בין העצים.',
     descriptionEn: 'Breathe the clear pine air and see the sunbeams between the trees.',
     promptsHe: [
@@ -54,6 +57,7 @@ const scenes = {
     titleEn: 'Open Meadow',
     icon: '🌻',
     color: 'bg-lime-500',
+    ambientMode: 'forest' as AmbientSoundMode, // Using forest for meadow as it has wind/nature vibes
     descriptionHe: 'שדות של פרחים צבעוניים וריח של פריחה באוויר.',
     descriptionEn: 'Fields of colorful flowers and the scent of blossoms in the air.',
     promptsHe: [
@@ -87,6 +91,10 @@ const VisualizationExercise: React.FC<Props> = ({ onComplete }) => {
 
     const sceneData = scenes[selectedScene];
     const title = lang === 'he' ? sceneData.titleHe : sceneData.titleEn;
+    
+    // Start ambient sound automatically for immersion
+    ambientService.setMode(sceneData.ambientMode);
+    
     ttsService.speak(lang === 'he' ? `בואו נצא למסע דמיוני אל ${title}. עיצמו עיניים בנחת.` : `Let's go on an imaginary journey to ${title}. Close your eyes gently.`);
 
     if (timerRef.current) clearInterval(timerRef.current);
@@ -117,11 +125,13 @@ const VisualizationExercise: React.FC<Props> = ({ onComplete }) => {
   const restartExercise = () => {
     if (timerRef.current) clearInterval(timerRef.current);
     ttsService.stop();
+    // ambientService is handled by startExercise
     startExercise();
   };
 
   const handleFinish = () => {
     if (timerRef.current) clearInterval(timerRef.current);
+    ambientService.setMode('off');
     statsService.addStar();
     statsService.addToHistory(t.visualization.title, '🌅', durationMins * 60);
     setIsFinished(true);
@@ -130,6 +140,7 @@ const VisualizationExercise: React.FC<Props> = ({ onComplete }) => {
   const stopEarly = () => {
     if (timerRef.current) clearInterval(timerRef.current);
     ttsService.stop();
+    ambientService.setMode('off');
     setStep('setup');
   };
 
@@ -143,6 +154,8 @@ const VisualizationExercise: React.FC<Props> = ({ onComplete }) => {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
       ttsService.stop();
+      // Ensure sound stops if component unmounts
+      ambientService.setMode('off');
     };
   }, []);
 

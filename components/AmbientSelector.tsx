@@ -36,14 +36,15 @@ const AmbientSelector: React.FC = () => {
     { mode: 'off', icon: '❌', label: t.off },
     { mode: 'rain', icon: '🌧️', label: t.rain },
     { mode: 'waves', icon: '🌊', label: t.waves },
-    { mode: 'forest', icon: '🌲', label: t.forest }
+    { mode: 'forest', icon: '🌲', label: t.forest },
+    { mode: 'yoga', icon: '🧘', label: t.yoga }
   ];
 
   return (
     <div className="flex flex-col gap-3 bg-slate-800 border-2 border-slate-700 p-4 rounded-3xl shadow-xl">
       <div className="flex items-center justify-between gap-4">
         <label className="text-sm font-bold text-slate-400">{t.ambient}</label>
-        <div className="flex gap-2">
+        <div className="flex gap-2 flex-wrap justify-end">
           {options.map((opt) => (
             <button
               key={opt.mode}

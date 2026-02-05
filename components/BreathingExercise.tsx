@@ -20,8 +20,10 @@ const BreathingExercise: React.FC<Props> = ({ onComplete }) => {
   const [isFinished, setIsFinished] = useState(false);
   const [cyclesDone, setCyclesDone] = useState(0);
   const [maxCycles, setMaxCycles] = useState(1); // User chosen repeats
+  const [timeLeftInPhase, setTimeLeftInPhase] = useState(0);
   
   const timerRef = useRef<number | null>(null);
+  const countdownRef = useRef<number | null>(null);
   const cycleCountRef = useRef(0);
   const phaseStartTimeRef = useRef<number>(0);
   const remainingInPhaseRef = useRef<number>(0);
@@ -32,6 +34,7 @@ const BreathingExercise: React.FC<Props> = ({ onComplete }) => {
 
   const handleFinish = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
+    if (countdownRef.current) clearInterval(countdownRef.current);
     ttsService.stop();
     statsService.addStar();
     statsService.addToHistory(t.breathing.title, '🌬️', 60 * maxCycles);
@@ -66,8 +69,18 @@ const BreathingExercise: React.FC<Props> = ({ onComplete }) => {
 
     phaseStartTimeRef.current = Date.now();
     remainingInPhaseRef.current = phaseDuration;
+    setTimeLeftInPhase(Math.ceil(phaseDuration / 1000));
+
+    // Cleanup previous countdown
+    if (countdownRef.current) clearInterval(countdownRef.current);
+    
+    countdownRef.current = window.setInterval(() => {
+       setTimeLeftInPhase(prev => Math.max(0, prev - 1));
+    }, 1000);
 
     timerRef.current = window.setTimeout(() => {
+      if (countdownRef.current) clearInterval(countdownRef.current);
+      
       if (currentPhase === 'inhale') {
         runPhase('hold');
       } else if (currentPhase === 'hold') {
@@ -76,9 +89,6 @@ const BreathingExercise: React.FC<Props> = ({ onComplete }) => {
         cycleCountRef.current += 1;
         setCyclesDone(cycleCountRef.current);
         
-        // Multi-cycle logic: repeat 3 breaths * maxCycles
-        // Actually the original request said "repeat the exercise up to 3 times"
-        // In breathing, one exercise = 3 breaths.
         if (cycleCountRef.current >= 3 * maxCycles) {
           handleFinish();
         } else {
@@ -105,6 +115,7 @@ const BreathingExercise: React.FC<Props> = ({ onComplete }) => {
     } else {
       setIsPaused(true);
       if (timerRef.current) clearTimeout(timerRef.current);
+      if (countdownRef.current) clearInterval(countdownRef.current);
       const elapsed = Date.now() - phaseStartTimeRef.current;
       remainingInPhaseRef.current = Math.max(0, remainingInPhaseRef.current - elapsed);
       ttsService.stop();
@@ -113,6 +124,7 @@ const BreathingExercise: React.FC<Props> = ({ onComplete }) => {
 
   const stopEarly = () => {
     if (timerRef.current) clearTimeout(timerRef.current);
+    if (countdownRef.current) clearInterval(countdownRef.current);
     setIsActive(false);
     setPhase('ready');
     ttsService.stop();
@@ -120,6 +132,7 @@ const BreathingExercise: React.FC<Props> = ({ onComplete }) => {
 
   const restartExercise = () => {
     if (timerRef.current) clearTimeout(timerRef.current);
+    if (countdownRef.current) clearInterval(countdownRef.current);
     ttsService.stop();
     startExercise();
   };
@@ -127,6 +140,7 @@ const BreathingExercise: React.FC<Props> = ({ onComplete }) => {
   useEffect(() => {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
+      if (countdownRef.current) clearInterval(countdownRef.current);
       ttsService.stop();
     };
   }, []);
@@ -226,10 +240,15 @@ const BreathingExercise: React.FC<Props> = ({ onComplete }) => {
               )}
             </div>
             
-            <div className="absolute z-20 text-center pointer-events-none">
-               <h3 className="text-5xl font-black text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)] uppercase tracking-wider">
+            <div className="absolute z-20 text-center pointer-events-none flex flex-col items-center">
+               <h3 className="text-5xl font-black text-white drop-shadow-[0_2px_10px_rgba(0,0,0,0.5)] uppercase tracking-wider mb-2">
                  {getPhaseText()}
                </h3>
+               {!isPaused && (
+                   <span className="text-6xl font-black text-white/80 tabular-nums drop-shadow-lg">
+                      {timeLeftInPhase}
+                   </span>
+               )}
             </div>
           </div>
 

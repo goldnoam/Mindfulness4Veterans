@@ -29,6 +29,7 @@ export const translations: Record<Language, any> = {
     movement: { title: "תנועה מודעת", desc: "מתיחות עדינות ומרעננות", icon: "🙆‍♂️" },
     soundMed: { title: "מדיטציית צליל", desc: "להקשיב לעומק השקט", icon: "🎧" },
     photos: { title: "צילום מודע", desc: "להתבונן ביופי שבפרטים", icon: "📸" },
+    wellness: { title: "שלומות", desc: "דקה לעצמכם ולרווחתכם", icon: "🌿" },
     volume: "עוצמה",
     share: "שתפו חברים",
     done: "סיימתי",
@@ -52,6 +53,7 @@ export const translations: Record<Language, any> = {
     rain: "גשם",
     waves: "גלים",
     forest: "יער",
+    yoga: "יוגה ופילאטיס",
     off: "כבוי"
   },
   en: {
@@ -81,6 +83,7 @@ export const translations: Record<Language, any> = {
     movement: { title: "Mindful Movement", desc: "Gentle refreshing stretches", icon: "🙆‍♂️" },
     soundMed: { title: "Sound Meditation", desc: "Listen to the depth of silence", icon: "🎧" },
     photos: { title: "Mindful Photos", desc: "Notice beauty in details", icon: "📸" },
+    wellness: { title: "Wellness", desc: "A minute for self-care", icon: "🌿" },
     volume: "Volume",
     share: "Share with friends",
     done: "Done",
@@ -104,6 +107,7 @@ export const translations: Record<Language, any> = {
     rain: "Rain",
     waves: "Waves",
     forest: "Forest",
+    yoga: "Yoga & Pilates",
     off: "Off"
   },
   zh: {
@@ -135,10 +139,12 @@ export const translations: Record<Language, any> = {
     rain: "雨声",
     waves: "海浪",
     forest: "森林",
+    yoga: "瑜伽与普拉提",
     off: "关闭",
     movement: { title: "正念运动", desc: "温柔的拉伸", icon: "🙆‍♂️" },
     soundMed: { title: "声音冥想", desc: "深度聆听", icon: "🎧" },
-    photos: { title: "正念观察", desc: "观察细节之美", icon: "📸" }
+    photos: { title: "正念观察", desc: "观察细节之美", icon: "📸" },
+    wellness: { title: "健康", desc: "关爱自己的时刻", icon: "🌿" }
   },
   hi: {
     langName: "हिन्दी",
@@ -169,10 +175,12 @@ export const translations: Record<Language, any> = {
     rain: "बारिश",
     waves: "लहरें",
     forest: "वन",
+    yoga: "योग और पिलेट्स",
     off: "बंद",
     movement: { title: "सचेत आंदोलन", desc: "कोमल खिंचाव", icon: "🙆‍♂️" },
     soundMed: { title: "ध्वनि ध्यान", desc: "गहराई से सुनें", icon: "🎧" },
-    photos: { title: "सचेत अवलोकन", desc: "विवरण में सुंदरता देखें", icon: "📸" }
+    photos: { title: "सचेत अवलोकन", desc: "विवरण में सुंदरता देखें", icon: "📸" },
+    wellness: { title: "कल्याण", desc: "आत्म-देखभाल का एक क्षण", icon: "🌿" }
   },
   de: {
     langName: "Deutsch",
@@ -203,10 +211,12 @@ export const translations: Record<Language, any> = {
     rain: "Regen",
     waves: "Wellen",
     forest: "Wald",
+    yoga: "Yoga & Pilates",
     off: "Aus",
     movement: { title: "Achtsame Bewegung", desc: "Sanftes Dehnen", icon: "🙆‍♂️" },
     soundMed: { title: "Klangmeditation", desc: "Tiefes Hören", icon: "🎧" },
-    photos: { title: "Achtsames Foto", desc: "Schönheit im Detail", icon: "📸" }
+    photos: { title: "Achtsames Foto", desc: "Schönheit im Detail", icon: "📸" },
+    wellness: { title: "Wellness", desc: "Ein Moment für sich", icon: "🌿" }
   },
   es: {
     langName: "Español",
@@ -237,10 +247,12 @@ export const translations: Record<Language, any> = {
     rain: "Lluvia",
     waves: "Olas",
     forest: "Bosque",
+    yoga: "Yoga y Pilates",
     off: "Apagado",
     movement: { title: "Movimiento Consciente", desc: "Estiramientos suaves", icon: "🙆‍♂️" },
     soundMed: { title: "Meditación de Sonido", desc: "Escucha profunda", icon: "🎧" },
-    photos: { title: "Fotos Conscientes", desc: "Belleza en los detalles", icon: "📸" }
+    photos: { title: "Fotos Conscientes", desc: "Belleza en los detalles", icon: "📸" },
+    wellness: { title: "Bienestar", desc: "Un momento de autocuidado", icon: "🌿" }
   },
   fr: {
     langName: "Français",
@@ -271,9 +283,11 @@ export const translations: Record<Language, any> = {
     rain: "Pluie",
     waves: "Vagues",
     forest: "Forêt",
+    yoga: "Yoga & Pilates",
     off: "Éteint",
     movement: { title: "Mouvement Conscient", desc: "Étirements doux", icon: "🙆‍♂️" },
     soundMed: { title: "Méditation Sonore", desc: "Écoute profonde", icon: "🎧" },
-    photos: { title: "Photos Conscientes", desc: "La beauté du détail", icon: "📸" }
+    photos: { title: "Photos Conscientes", desc: "La beauté du détail", icon: "📸" },
+    wellness: { title: "Bien-être", desc: "Un moment pour soi", icon: "🌿" }
   }
 };
