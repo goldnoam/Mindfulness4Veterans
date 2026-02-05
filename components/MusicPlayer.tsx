@@ -1,14 +1,28 @@
 
 import React, { useState, useEffect } from 'react';
 import { musicService } from '../services/musicService';
+import { translations, Language } from '../translations';
+import { ttsService } from '../services/ttsService';
 
 const MusicPlayer: React.FC = () => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(0.15);
+  const [lang, setLang] = useState<Language>((localStorage.getItem('lang') as Language) || 'he');
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      const stored = localStorage.getItem('lang') as Language;
+      if (stored && stored !== lang) setLang(stored);
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [lang]);
+
+  const t = translations[lang];
 
   const toggleMusic = () => {
     musicService.toggle();
     setIsPlaying(musicService.getIsPlaying());
+    ttsService.speak(isPlaying ? 'Stop Music' : 'Start Music');
   };
 
   const handleVolume = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -22,12 +36,12 @@ const MusicPlayer: React.FC = () => {
       <button 
         onClick={toggleMusic}
         className={`w-12 h-12 flex items-center justify-center rounded-full transition-all ${isPlaying ? 'bg-emerald-500 text-white shadow-[0_0_15px_rgba(16,185,129,0.5)]' : 'bg-slate-700 text-slate-400'}`}
-        aria-label={isPlaying ? 'כבה מוזיקת רקע' : 'הפעל מוזיקת רקע'}
+        aria-label={isPlaying ? 'Music On' : 'Music Off'}
       >
         {isPlaying ? '🎵' : '🔇'}
       </button>
       <div className="flex flex-col gap-1">
-        <label className="text-xs text-slate-400 font-bold px-1">עוצמה</label>
+        <label className="text-xs text-slate-400 font-bold px-1">{t.volume}</label>
         <input 
           type="range" 
           min="0" 
