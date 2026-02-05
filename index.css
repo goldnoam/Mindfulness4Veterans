@@ -3,7 +3,7 @@
 @tailwind utilities;
 
 :root {
-  --app-font-scale: 1;
+  --app-font-scale: 1.1;
 }
 
 @layer base {
@@ -22,10 +22,10 @@
     @apply bg-slate-50 text-slate-900;
   }
 
-  /* Global Font Size Scale Classes */
-  .font-scale-small { --app-font-scale: 0.85; }
-  .font-scale-medium { --app-font-scale: 1; }
-  .font-scale-large { --app-font-scale: 1.25; }
+  /* Global Font Size Scale Classes - Adjusted for Seniors */
+  .font-scale-small { --app-font-scale: 0.95; }
+  .font-scale-medium { --app-font-scale: 1.15; }
+  .font-scale-large { --app-font-scale: 1.45; }
 }
 
 @layer components {

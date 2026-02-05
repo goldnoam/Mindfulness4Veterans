@@ -5,7 +5,7 @@ class AmbientService {
   private audioCtx: AudioContext | null = null;
   private gainNode: GainNode | null = null;
   private currentMode: AmbientSoundMode = 'off';
-  private currentVolume: number = 0.2; // Defaulted to lower volume for pleasantness
+  private currentVolume: number = 0.15; // Lower default volume for tranquility
   private sources: AudioNode[] = [];
   private birdTimer: number | null = null;
   private flutterTimer: number | null = null;
@@ -57,30 +57,31 @@ class AmbientService {
   }
 
   private triggerBirdChirp() {
-    if (!this.audioCtx || !this.gainNode || this.currentMode !== 'forest') return;
+    if (!this.audioCtx || !this.gainNode || (this.currentMode !== 'forest' && this.currentMode !== 'butterflies')) return;
     
     const now = this.audioCtx.currentTime;
     const numChirps = 1 + Math.floor(Math.random() * 2);
     
     for (let i = 0; i < numChirps; i++) {
-      const startOffset = i * 0.2;
+      const startOffset = i * 0.3;
       const osc = this.audioCtx.createOscillator();
       const chirpGain = this.audioCtx.createGain();
 
       osc.type = 'sine';
-      const baseFreq = 2200 + Math.random() * 800;
+      // Lower and softer frequency for "gentle" birds
+      const baseFreq = 1800 + Math.random() * 600;
       osc.frequency.setValueAtTime(baseFreq, now + startOffset);
-      osc.frequency.exponentialRampToValueAtTime(baseFreq + 1000, now + startOffset + 0.1);
+      osc.frequency.exponentialRampToValueAtTime(baseFreq + 400, now + startOffset + 0.15);
 
       chirpGain.gain.setValueAtTime(0, now + startOffset);
-      chirpGain.gain.linearRampToValueAtTime(0.015, now + startOffset + 0.02);
-      chirpGain.gain.exponentialRampToValueAtTime(0.0001, now + startOffset + 0.15);
+      chirpGain.gain.linearRampToValueAtTime(0.008, now + startOffset + 0.03); // Very quiet
+      chirpGain.gain.exponentialRampToValueAtTime(0.0001, now + startOffset + 0.25);
 
       osc.connect(chirpGain);
       chirpGain.connect(this.gainNode);
       
       osc.start(now + startOffset);
-      osc.stop(now + startOffset + 0.2);
+      osc.stop(now + startOffset + 0.3);
     }
   }
 
@@ -88,24 +89,23 @@ class AmbientService {
     if (!this.audioCtx || !this.gainNode || this.currentMode !== 'butterflies') return;
     
     const now = this.audioCtx.currentTime;
-    // Crickets have a rhythmic "pulse"
-    const pulses = 3 + Math.floor(Math.random() * 4);
+    const pulses = 2 + Math.floor(Math.random() * 3);
     for (let i = 0; i < pulses; i++) {
-        const start = now + (i * 0.08);
+        const start = now + (i * 0.1);
         const osc = this.audioCtx.createOscillator();
         const g = this.audioCtx.createGain();
         
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(4500 + Math.random() * 500, start);
+        osc.frequency.setValueAtTime(4000 + Math.random() * 300, start);
         
         g.gain.setValueAtTime(0, start);
-        g.gain.linearRampToValueAtTime(0.01, start + 0.01);
-        g.gain.linearRampToValueAtTime(0, start + 0.04);
+        g.gain.linearRampToValueAtTime(0.005, start + 0.02); // Barely audible
+        g.gain.linearRampToValueAtTime(0, start + 0.06);
         
         osc.connect(g);
         g.connect(this.gainNode);
         osc.start(start);
-        osc.stop(start + 0.05);
+        osc.stop(start + 0.1);
     }
   }
 
@@ -113,7 +113,7 @@ class AmbientService {
     if (!this.audioCtx || !this.gainNode || this.currentMode !== 'butterflies') return;
     
     const now = this.audioCtx.currentTime;
-    const duration = 0.8 + Math.random() * 1.2;
+    const duration = 1.0 + Math.random() * 1.0;
     
     const bufferSize = this.audioCtx.sampleRate * 2;
     const buffer = this.audioCtx.createBuffer(1, bufferSize, this.audioCtx.sampleRate);
@@ -126,18 +126,18 @@ class AmbientService {
 
     const filter = this.audioCtx.createBiquadFilter();
     filter.type = 'highpass';
-    filter.frequency.setValueAtTime(3000, now);
+    filter.frequency.setValueAtTime(4000, now); // Higher for silkier sound
 
     const flutterGain = this.audioCtx.createGain();
     const lfo = this.audioCtx.createOscillator();
     const lfoGain = this.audioCtx.createGain();
 
     lfo.type = 'sine';
-    lfo.frequency.setValueAtTime(15 + Math.random() * 5, now);
-    lfoGain.gain.setValueAtTime(0.3, now);
+    lfo.frequency.setValueAtTime(8 + Math.random() * 4, now); // Slower, gentler flutter
+    lfoGain.gain.setValueAtTime(0.2, now);
 
     flutterGain.gain.setValueAtTime(0, now);
-    flutterGain.gain.linearRampToValueAtTime(0.03, now + 0.3);
+    flutterGain.gain.linearRampToValueAtTime(0.015, now + 0.4); 
     flutterGain.gain.linearRampToValueAtTime(0, now + duration);
 
     lfo.connect(lfoGain);
@@ -156,6 +156,15 @@ class AmbientService {
     if (!this.audioCtx || !this.gainNode) return;
     if (this.audioCtx.state === 'suspended') this.audioCtx.resume();
 
+    const bufferSize = 4 * this.audioCtx.sampleRate;
+    const noiseBuffer = this.audioCtx.createBuffer(1, bufferSize, this.audioCtx.sampleRate);
+    const output = noiseBuffer.getChannelData(0);
+    for (let i = 0; i < bufferSize; i++) output[i] = Math.random() * 2 - 1;
+
+    const noiseSource = this.audioCtx.createBufferSource();
+    noiseSource.buffer = noiseBuffer;
+    noiseSource.loop = true;
+
     if (mode === 'yoga') {
         const freqs = [174.61, 220.00, 261.63, 349.23];
         freqs.forEach((f, i) => {
@@ -166,10 +175,10 @@ class AmbientService {
             osc.type = 'sine';
             osc.frequency.setValueAtTime(f, this.audioCtx!.currentTime);
             oscGain.gain.setValueAtTime(0, this.audioCtx!.currentTime);
-            oscGain.gain.linearRampToValueAtTime(0.12 / freqs.length, this.audioCtx!.currentTime + 3);
+            oscGain.gain.linearRampToValueAtTime(0.1 / freqs.length, this.audioCtx!.currentTime + 4);
             lfo.type = 'sine';
-            lfo.frequency.setValueAtTime(0.04 + i * 0.01, this.audioCtx!.currentTime);
-            lfoGain.gain.setValueAtTime(0.04, this.audioCtx!.currentTime);
+            lfo.frequency.setValueAtTime(0.03 + i * 0.01, this.audioCtx!.currentTime);
+            lfoGain.gain.setValueAtTime(0.03, this.audioCtx!.currentTime);
             lfo.connect(lfoGain);
             lfoGain.connect(oscGain.gain);
             osc.connect(oscGain);
@@ -178,80 +187,96 @@ class AmbientService {
             lfo.start();
             this.sources.push(osc, lfo, oscGain, lfoGain);
         });
-    } else {
-        const bufferSize = 2 * this.audioCtx.sampleRate;
-        const noiseBuffer = this.audioCtx.createBuffer(1, bufferSize, this.audioCtx.sampleRate);
-        const output = noiseBuffer.getChannelData(0);
-        for (let i = 0; i < bufferSize; i++) output[i] = Math.random() * 2 - 1;
-
-        const noiseSource = this.audioCtx.createBufferSource();
-        noiseSource.buffer = noiseBuffer;
-        noiseSource.loop = true;
+    } else if (mode === 'rain') {
         const filter = this.audioCtx.createBiquadFilter();
-        
-        if (mode === 'rain') {
-          filter.type = 'lowpass';
-          filter.frequency.setValueAtTime(800, this.audioCtx.currentTime);
-          const highPass = this.audioCtx.createBiquadFilter();
-          highPass.type = 'highpass';
-          highPass.frequency.setValueAtTime(400, this.audioCtx.currentTime);
-          noiseSource.connect(highPass);
-          highPass.connect(filter);
-          filter.connect(this.gainNode);
-          this.sources.push(noiseSource, filter, highPass);
-        } else if (mode === 'waves') {
-          filter.type = 'lowpass';
-          filter.frequency.setValueAtTime(350, this.audioCtx.currentTime);
-          const lfo = this.audioCtx.createOscillator();
-          const lfoGain = this.audioCtx.createGain();
-          lfo.frequency.setValueAtTime(0.1, this.audioCtx.currentTime);
-          lfoGain.gain.setValueAtTime(0.2, this.audioCtx.currentTime);
-          const innerGain = this.audioCtx.createGain();
-          innerGain.gain.setValueAtTime(0.3, this.audioCtx.currentTime);
-          lfo.connect(lfoGain);
-          lfoGain.connect(innerGain.gain);
-          noiseSource.connect(filter);
-          filter.connect(innerGain);
-          innerGain.connect(this.gainNode);
-          lfo.start();
-          this.sources.push(noiseSource, filter, lfo, lfoGain, innerGain);
-        } else if (mode === 'forest' || mode === 'butterflies') {
-          filter.type = 'lowpass';
-          filter.frequency.setValueAtTime(mode === 'forest' ? 400 : 600, this.audioCtx.currentTime);
-          const lfo = this.audioCtx.createOscillator();
-          const lfoGain = this.audioCtx.createGain();
-          lfo.type = 'sine';
-          lfo.frequency.setValueAtTime(0.05, this.audioCtx.currentTime);
-          lfoGain.gain.setValueAtTime(100, this.audioCtx.currentTime);
-          lfo.connect(lfoGain);
-          lfoGain.connect(filter.frequency);
-          noiseSource.connect(filter);
-          filter.connect(this.gainNode);
-          lfo.start();
-          this.sources.push(noiseSource, filter, lfo, lfoGain);
-
-          if (mode === 'forest') {
-            this.birdTimer = window.setInterval(() => {
-              if (Math.random() > 0.4) this.triggerBirdChirp();
-            }, 4000);
-          } else if (mode === 'butterflies') {
-            this.flutterTimer = window.setInterval(() => {
-              if (Math.random() > 0.5) this.triggerButterflyFlutter();
-            }, 3000);
-            this.cricketTimer = window.setInterval(() => {
-              if (Math.random() > 0.3) this.triggerSoftCricket();
-            }, 5000);
-          }
-        }
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(700, this.audioCtx.currentTime);
+        noiseSource.connect(filter);
+        filter.connect(this.gainNode);
         noiseSource.start();
+        this.sources.push(noiseSource, filter);
+    } else if (mode === 'waves') {
+        const filter = this.audioCtx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.setValueAtTime(300, this.audioCtx.currentTime);
+        const lfo = this.audioCtx.createOscillator();
+        const lfoGain = this.audioCtx.createGain();
+        lfo.frequency.setValueAtTime(0.08, this.audioCtx.currentTime);
+        lfoGain.gain.setValueAtTime(0.15, this.audioCtx.currentTime);
+        const innerGain = this.audioCtx.createGain();
+        innerGain.gain.setValueAtTime(0.2, this.audioCtx.currentTime);
+        lfo.connect(lfoGain);
+        lfoGain.connect(innerGain.gain);
+        noiseSource.connect(filter);
+        filter.connect(innerGain);
+        innerGain.connect(this.gainNode);
+        lfo.start();
+        noiseSource.start();
+        this.sources.push(noiseSource, filter, lfo, lfoGain, innerGain);
+    } else if (mode === 'forest' || mode === 'butterflies') {
+        // Meadow/Forest Breeze Layer
+        const breezeFilter = this.audioCtx.createBiquadFilter();
+        breezeFilter.type = 'lowpass';
+        breezeFilter.frequency.setValueAtTime(mode === 'forest' ? 300 : 500, this.audioCtx.currentTime);
+        const breezeLfo = this.audioCtx.createOscillator();
+        const breezeLfoGain = this.audioCtx.createGain();
+        breezeLfo.frequency.setValueAtTime(0.04, this.audioCtx.currentTime);
+        breezeLfoGain.gain.setValueAtTime(80, this.audioCtx.currentTime);
+        breezeLfo.connect(breezeLfoGain);
+        breezeLfoGain.connect(breezeFilter.frequency);
+        noiseSource.connect(breezeFilter);
+        breezeFilter.connect(this.gainNode);
+        breezeLfo.start();
+        noiseSource.start();
+        this.sources.push(noiseSource, breezeFilter, breezeLfo, breezeLfoGain);
+
+        if (mode === 'forest') {
+            // Babbling Brook Layer (Water)
+            const waterSource = this.audioCtx.createBufferSource();
+            waterSource.buffer = noiseBuffer;
+            waterSource.loop = true;
+            const waterFilter = this.audioCtx.createBiquadFilter();
+            waterFilter.type = 'lowpass';
+            waterFilter.frequency.setValueAtTime(400, this.audioCtx.currentTime);
+            const waterLfo = this.audioCtx.createOscillator();
+            const waterLfoGain = this.audioCtx.createGain();
+            waterLfo.frequency.setValueAtTime(1.5, this.audioCtx.currentTime); // Ripples
+            waterLfoGain.gain.setValueAtTime(0.05, this.audioCtx.currentTime);
+            const waterGain = this.audioCtx.createGain();
+            waterGain.gain.setValueAtTime(0.08, this.audioCtx.currentTime);
+            waterLfo.connect(waterLfoGain);
+            waterLfoGain.connect(waterGain.gain);
+            waterSource.connect(waterFilter);
+            waterFilter.connect(waterGain);
+            waterGain.connect(this.gainNode);
+            waterLfo.start();
+            waterSource.start();
+            this.sources.push(waterSource, waterFilter, waterLfo, waterLfoGain, waterGain);
+
+            this.birdTimer = window.setInterval(() => {
+                if (Math.random() > 0.5) this.triggerBirdChirp();
+            }, 5000);
+        } else {
+            // Butterflies / Open Space
+            this.flutterTimer = window.setInterval(() => {
+                if (Math.random() > 0.6) this.triggerButterflyFlutter();
+            }, 4000);
+            this.cricketTimer = window.setInterval(() => {
+                if (Math.random() > 0.4) this.triggerSoftCricket();
+            }, 6000);
+            this.birdTimer = window.setInterval(() => {
+                if (Math.random() > 0.7) this.triggerBirdChirp();
+            }, 8000);
+        }
     }
-    this.gainNode.gain.linearRampToValueAtTime(this.currentVolume, this.audioCtx.currentTime + 2);
+
+    this.gainNode.gain.linearRampToValueAtTime(this.currentVolume, this.audioCtx.currentTime + 3);
   }
 
   setVolume(val: number) {
     this.currentVolume = val;
     if (this.gainNode && this.audioCtx) {
-      this.gainNode.gain.setTargetAtTime(val, this.audioCtx.currentTime, 0.2);
+      this.gainNode.gain.setTargetAtTime(val, this.audioCtx.currentTime, 0.3);
     }
   }
 
