@@ -1,8 +1,9 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ttsService } from '../services/ttsService';
 import { statsService } from '../services/statsService';
 import ShareButton from './ShareButton';
+import MuteToggle from './MuteToggle';
 
 interface Props {
   onComplete: () => void;
@@ -21,22 +22,48 @@ const prompts = [
 
 const GratitudeExercise: React.FC<Props> = ({ onComplete }) => {
   const [currentPrompt, setCurrentPrompt] = useState<string | null>(null);
+  const [timeLeft, setTimeLeft] = useState(120); // 2 minutes
+  const timerRef = useRef<number | null>(null);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  const startTimer = () => {
+    if (timerRef.current) return;
+    timerRef.current = window.setInterval(() => {
+      setTimeLeft(prev => {
+        if (prev <= 1) {
+          if (timerRef.current) clearInterval(timerRef.current);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+  };
 
   const getRandomPrompt = () => {
     const randomIndex = Math.floor(Math.random() * prompts.length);
     const text = prompts[randomIndex];
     setCurrentPrompt(text);
     ttsService.speak(`חישבו על ${text}`);
+    startTimer();
   };
 
   const handleDone = () => {
+    if (timerRef.current) clearInterval(timerRef.current);
     ttsService.speak("איזה יופי, תודה על השיתוף.");
     statsService.addStar();
     onComplete();
   };
 
   useEffect(() => {
-    return () => ttsService.stop();
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      ttsService.stop();
+    };
   }, []);
 
   return (
@@ -45,6 +72,12 @@ const GratitudeExercise: React.FC<Props> = ({ onComplete }) => {
         <div className="absolute top-0 left-0 w-full h-4 bg-amber-500/20"></div>
         {currentPrompt ? (
           <>
+            <div className="flex items-center justify-between mb-6">
+               <div className="bg-slate-800 px-4 py-2 rounded-xl text-2xl font-bold text-amber-400 tabular-nums border-2 border-amber-500/20">
+                {formatTime(timeLeft)}
+               </div>
+               <MuteToggle />
+            </div>
             <h3 className="text-4xl font-bold text-amber-400 mb-8 underline decoration-amber-500/40">תודה על...</h3>
             <p className="text-3xl font-medium text-slate-100 mb-12 min-h-[100px] leading-snug drop-shadow-md">
               {currentPrompt}

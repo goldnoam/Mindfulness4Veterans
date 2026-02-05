@@ -9,6 +9,7 @@ import VisualizationExercise from './components/VisualizationExercise';
 import BodyScanExercise from './components/BodyScanExercise';
 import MindfulEatingExercise from './components/MindfulEatingExercise';
 import WalkingMeditationExercise from './components/WalkingMeditationExercise';
+import HistoryView from './components/HistoryView';
 import { ExerciseType } from './types';
 import { statsService } from './services/statsService';
 import { translations, Language } from './translations';
@@ -30,7 +31,14 @@ const App: React.FC = () => {
     return () => clearInterval(interval);
   }, [lang]);
 
-  const t = translations[lang];
+  // Refresh stars whenever we return to the Home screen
+  useEffect(() => {
+    if (currentView === ExerciseType.HOME) {
+      setStars(statsService.getStars());
+    }
+  }, [currentView]);
+
+  const t = translations[lang] || translations['he'];
 
   const exercises = [
     { id: ExerciseType.BREATHING, ...t.breathing, color: 'border-emerald-500', bg: 'bg-emerald-500/10' },
@@ -59,10 +67,16 @@ const App: React.FC = () => {
     ttsService.speak(exercises[prevIdx].title);
   };
 
-  const isExerciseActive = currentView !== ExerciseType.HOME;
+  const isExerciseActive = currentView !== ExerciseType.HOME && currentView !== ExerciseType.HISTORY;
 
   const renderContent = () => {
     switch (currentView) {
+      case ExerciseType.HISTORY:
+        return (
+          <Layout title={t.history} onBack={() => setCurrentView(ExerciseType.HOME)}>
+            <HistoryView onBack={() => setCurrentView(ExerciseType.HOME)} />
+          </Layout>
+        );
       case ExerciseType.BREATHING:
         return (
           <Layout title={t.breathing.title} onBack={() => setCurrentView(ExerciseType.HOME)} isExerciseActive={isExerciseActive}>
@@ -116,20 +130,29 @@ const App: React.FC = () => {
         const currentExercise = exercises[carouselIndex];
         return (
           <Layout title={t.title} isExerciseActive={false}>
-            <div className="flex flex-col gap-10 w-full px-4 max-w-lg pb-10">
+            <div className="flex flex-col gap-8 w-full px-4 max-w-lg pb-10">
               
-              <div className="bg-slate-900 border-2 border-slate-800 rounded-[40px] p-6 shadow-xl flex flex-col items-center">
-                 <div className="flex items-center gap-4">
-                    <span className="text-6xl star-animate" role="img" aria-label="star">⭐</span>
-                    <span className="text-5xl font-bold text-emerald-400">{stars}</span>
-                 </div>
-                 <p className="text-xl text-slate-400 font-bold mt-2 text-center">{t.stars}</p>
+              <div className="flex items-center gap-4">
+                <div className="flex-1 bg-slate-900 border-2 border-slate-800 rounded-[40px] p-6 shadow-xl flex flex-col items-center">
+                   <div className="flex items-center gap-4">
+                      <span className="text-6xl star-animate" role="img" aria-label="star" key={stars}>⭐</span>
+                      <span className="text-5xl font-bold text-emerald-400">{stars}</span>
+                   </div>
+                   <p className="text-xl text-slate-400 font-bold mt-2 text-center">{t.stars}</p>
+                </div>
+                <button 
+                  onClick={() => setCurrentView(ExerciseType.HISTORY)}
+                  className="bg-slate-800 border-4 border-slate-700 p-6 rounded-[40px] text-4xl shadow-xl active:scale-95 hover:border-emerald-500 transition-all flex items-center justify-center h-full"
+                  aria-label={t.history}
+                >
+                  📜
+                </button>
               </div>
 
-              <div className="relative flex items-center justify-center group">
+              <div className="relative flex items-center justify-center group" role="region" aria-label="Exercise Carousel">
                  <button 
                   onClick={prevCarousel}
-                  className="absolute -left-4 md:-left-16 z-20 bg-slate-800 border-2 border-slate-700 w-16 h-16 rounded-full flex items-center justify-center text-3xl shadow-2xl active:scale-90 hover:border-emerald-500 transition-all"
+                  className="absolute -left-4 md:-left-16 z-20 bg-slate-800 border-2 border-slate-700 w-16 h-16 rounded-full flex items-center justify-center text-3xl shadow-2xl active:scale-90 hover:border-emerald-500 transition-all focus-visible:ring-4 focus-visible:ring-emerald-400"
                   aria-label="Previous Exercise"
                  >
                    {lang === 'he' ? '➡️' : '⬅️'}
@@ -138,7 +161,7 @@ const App: React.FC = () => {
                  <div className="w-full transform transition-all duration-300">
                     <button 
                       onClick={() => { ttsService.speak(currentExercise.title); setCurrentView(currentExercise.id); }}
-                      className={`w-full bg-slate-900 border-4 ${currentExercise.color} p-8 rounded-[48px] shadow-2xl active:scale-95 flex flex-col items-center text-center transition-all hover:shadow-[0_0_40px_rgba(16,185,129,0.1)]`}
+                      className={`w-full bg-slate-900 border-4 ${currentExercise.color} p-8 rounded-[48px] shadow-2xl active:scale-95 flex flex-col items-center text-center transition-all hover:shadow-[0_0_40px_rgba(16,185,129,0.1)] focus-visible:ring-4 focus-visible:ring-emerald-400`}
                     >
                       <div className={`p-8 rounded-full text-7xl mb-6 ${currentExercise.bg}`} aria-hidden="true">
                         {currentExercise.icon}
@@ -154,14 +177,14 @@ const App: React.FC = () => {
 
                  <button 
                   onClick={nextCarousel}
-                  className="absolute -right-4 md:-right-16 z-20 bg-slate-800 border-2 border-slate-700 w-16 h-16 rounded-full flex items-center justify-center text-3xl shadow-2xl active:scale-90 hover:border-emerald-500 transition-all"
+                  className="absolute -right-4 md:-right-16 z-20 bg-slate-800 border-2 border-slate-700 w-16 h-16 rounded-full flex items-center justify-center text-3xl shadow-2xl active:scale-90 hover:border-emerald-500 transition-all focus-visible:ring-4 focus-visible:ring-emerald-400"
                   aria-label="Next Exercise"
                  >
                    {lang === 'he' ? '⬅️' : '➡️'}
                  </button>
               </div>
 
-              <div className="flex justify-center gap-2">
+              <div className="flex justify-center gap-2" aria-hidden="true">
                 {exercises.map((_, idx) => (
                   <div 
                     key={idx} 

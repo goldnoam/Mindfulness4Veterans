@@ -3,6 +3,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ttsService } from '../services/ttsService';
 import { statsService } from '../services/statsService';
 import ShareButton from './ShareButton';
+import MuteToggle from './MuteToggle';
 
 interface Props {
   onComplete: () => void;
@@ -144,12 +145,17 @@ const BodyScanExercise: React.FC<Props> = ({ onComplete }) => {
   }
 
   return (
-    <div className="flex flex-col items-center gap-12 w-full max-w-lg text-center">
+    <div className="flex flex-col items-center gap-8 w-full max-w-lg text-center">
+      <div className="flex items-center justify-between w-full px-6">
+          <div className="bg-slate-800 px-6 py-2 rounded-2xl border-2 border-indigo-500/30 text-3xl font-bold text-indigo-400 tabular-nums shadow-lg">
+            {formatTime(timeLeft)}
+          </div>
+          <MuteToggle />
+      </div>
+
       <div className="relative w-64 h-80 flex items-center justify-center">
         <div className="absolute inset-0 bg-indigo-500/10 rounded-3xl blur-xl"></div>
         <div className="text-[200px] leading-none select-none drop-shadow-2xl">👤</div>
-        
-        {/* Scanning Light Effect */}
         <div 
           className="absolute left-0 right-0 h-4 bg-indigo-400 shadow-[0_0_20px_#818cf8] transition-all duration-1000 ease-in-out z-20"
           style={{ 
@@ -163,7 +169,6 @@ const BodyScanExercise: React.FC<Props> = ({ onComplete }) => {
         <h3 className="text-3xl font-bold text-indigo-400 mb-2">
           {currentPartIndex === -1 ? 'מתכוננים...' : bodyParts[currentPartIndex].name}
         </h3>
-        <p className="text-5xl font-bold text-white tabular-nums">{formatTime(timeLeft)}</p>
       </div>
 
       <p className="text-2xl text-slate-300 font-medium px-4 h-24 flex items-center justify-center leading-tight">

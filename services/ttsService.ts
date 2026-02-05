@@ -4,6 +4,7 @@ import { Language } from '../translations';
 class TTSService {
   private synth: SpeechSynthesis;
   private currentLang: Language = 'he';
+  private isMuted: boolean = false;
 
   private langMap: Record<Language, string> = {
     he: 'he-IL',
@@ -23,7 +24,21 @@ class TTSService {
     this.currentLang = lang;
   }
 
+  toggleMute() {
+    this.isMuted = !this.isMuted;
+    if (this.isMuted) this.synth.cancel();
+    return this.isMuted;
+  }
+
+  getMuted() {
+    return this.isMuted;
+  }
+
   speak(text: string, onEnd?: () => void) {
+    if (this.isMuted) {
+      if (onEnd) onEnd();
+      return;
+    }
     this.synth.cancel();
 
     const utterance = new SpeechSynthesisUtterance(text);

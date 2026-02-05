@@ -1,8 +1,9 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ttsService } from '../services/ttsService';
 import { statsService } from '../services/statsService';
 import ShareButton from './ShareButton';
+import MuteToggle from './MuteToggle';
 
 interface Props {
   onComplete: () => void;
@@ -19,20 +20,43 @@ const steps = [
 
 const SensesExercise: React.FC<Props> = ({ onComplete }) => {
   const [stepIndex, setStepIndex] = useState(-1);
+  const [timeLeft, setTimeLeft] = useState(180); // 3 minutes total
+  const timerRef = useRef<number | null>(null);
+
+  const formatTime = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
 
   const nextStep = () => {
     const nextIdx = stepIndex + 1;
     if (nextIdx < steps.length) {
       setStepIndex(nextIdx);
       ttsService.speak(steps[nextIdx].text);
+      if (nextIdx === 0) {
+        timerRef.current = window.setInterval(() => {
+          setTimeLeft(prev => {
+            if (prev <= 1) {
+              if (timerRef.current) clearInterval(timerRef.current);
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+      }
       if (nextIdx === steps.length - 1) {
+        if (timerRef.current) clearInterval(timerRef.current);
         statsService.addStar();
       }
     }
   };
 
   useEffect(() => {
-    return () => ttsService.stop();
+    return () => {
+      if (timerRef.current) clearInterval(timerRef.current);
+      ttsService.stop();
+    };
   }, []);
 
   return (
@@ -46,6 +70,12 @@ const SensesExercise: React.FC<Props> = ({ onComplete }) => {
         </button>
       ) : (
         <div className="bg-slate-900 p-8 rounded-[48px] shadow-2xl border-4 border-blue-500/30 w-full max-w-lg text-center">
+          <div className="flex items-center justify-between mb-6">
+            <div className="bg-slate-800 px-4 py-2 rounded-xl text-2xl font-bold text-blue-400 tabular-nums border-2 border-blue-500/20">
+              {formatTime(timeLeft)}
+            </div>
+            <MuteToggle />
+          </div>
           <h3 className="text-4xl font-bold text-blue-400 mb-6 drop-shadow-md">{steps[stepIndex].title}</h3>
           <p className="text-3xl leading-relaxed text-slate-200 mb-10 min-h-[120px]">
             {steps[stepIndex].text}

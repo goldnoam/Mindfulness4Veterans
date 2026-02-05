@@ -26,7 +26,14 @@ export const translations: Record<Language, any> = {
     volume: "עוצמה",
     share: "שתפו חברים",
     done: "סיימתי",
-    next: "המשך"
+    next: "המשך",
+    history: "יומן פעילות",
+    historyEmpty: "עדיין אין תרגילים ביומן. התחילו לתרגל!",
+    date: "תאריך",
+    duration: "משך זמן",
+    clearHistory: "נקה יומן",
+    sec: "שנ'",
+    min: "דק'"
   },
   en: {
     title: "Moment of Peace",
@@ -52,7 +59,14 @@ export const translations: Record<Language, any> = {
     volume: "Volume",
     share: "Share with friends",
     done: "Done",
-    next: "Next"
+    next: "Next",
+    history: "History Log",
+    historyEmpty: "No exercises in log yet. Start practicing!",
+    date: "Date",
+    duration: "Duration",
+    clearHistory: "Clear Log",
+    sec: "sec",
+    min: "min"
   },
   zh: {
     title: "宁静时刻",
@@ -78,7 +92,14 @@ export const translations: Record<Language, any> = {
     volume: "音量",
     share: "分享",
     done: "完成",
-    next: "下一步"
+    next: "下一步",
+    history: "练习记录",
+    historyEmpty: "记录中尚无练习。开始练习吧！",
+    date: "日期",
+    duration: "持续时间",
+    clearHistory: "清除记录",
+    sec: "秒",
+    min: "分"
   },
   hi: {
     title: "शांति का क्षण",
@@ -104,7 +125,14 @@ export const translations: Record<Language, any> = {
     volume: "आवाज़",
     share: "साझा करें",
     done: "हो गया",
-    next: "अगला"
+    next: "अगला",
+    history: "इतिहास लॉग",
+    historyEmpty: "अभी तक लॉग में कोई अभ्यास नहीं है। अभ्यास शुरू करें!",
+    date: "तारीख",
+    duration: "अवधि",
+    clearHistory: "लॉग साफ़ करें",
+    sec: "सेकंड",
+    min: "मिनट"
   },
   de: {
     title: "Moment der Ruhe",
@@ -130,7 +158,14 @@ export const translations: Record<Language, any> = {
     volume: "Lautstärke",
     share: "Teilen",
     done: "Fertig",
-    next: "Weiter"
+    next: "Weiter",
+    history: "Verlauf",
+    historyEmpty: "Noch keine Übungen im Verlauf. Fange an zu üben!",
+    date: "Datum",
+    duration: "Dauer",
+    clearHistory: "Verlauf löschen",
+    sec: "Sek",
+    min: "Min"
   },
   es: {
     title: "Momento de Paz",
@@ -156,7 +191,14 @@ export const translations: Record<Language, any> = {
     volume: "Volumen",
     share: "Compartir",
     done: "Listo",
-    next: "Siguiente"
+    next: "Siguiente",
+    history: "Historial",
+    historyEmpty: "Aún no hay ejercicios en el historial. ¡Empieza a practicar!",
+    date: "Fecha",
+    duration: "Duración",
+    clearHistory: "Borrar historial",
+    sec: "seg",
+    min: "min"
   },
   fr: {
     title: "Moment de Paix",
@@ -182,6 +224,13 @@ export const translations: Record<Language, any> = {
     volume: "Volume",
     share: "Partager",
     done: "Terminé",
-    next: "Suivant"
+    next: "Suivant",
+    history: "Historique",
+    historyEmpty: "Aucun exercice dans l'historique. Commencez à pratiquer !",
+    date: "Date",
+    duration: "Durée",
+    clearHistory: "Effacer l'historique",
+    sec: "sec",
+    min: "min"
   }
 };
