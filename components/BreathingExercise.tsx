@@ -2,8 +2,9 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { ttsService } from '../services/ttsService';
 import { statsService } from '../services/statsService';
-import ShareButton from './ShareButton';
+import CelebrationOverlay from './CelebrationOverlay';
 import MuteToggle from './MuteToggle';
+import { Language, translations } from '../translations';
 
 interface Props {
   onComplete: () => void;
@@ -14,10 +15,15 @@ type Phase = 'ready' | 'inhale' | 'hold' | 'exhale';
 const BreathingExercise: React.FC<Props> = ({ onComplete }) => {
   const [phase, setPhase] = useState<Phase>('ready');
   const [isActive, setIsActive] = useState(false);
+  const [isFinished, setIsFinished] = useState(false);
   const [cyclesDone, setCyclesDone] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(120); // 2 minutes default
+  const [durationMins, setDurationMins] = useState(2);
+  const [timeLeft, setTimeLeft] = useState(120);
   const timerRef = useRef<number | null>(null);
   const countdownRef = useRef<number | null>(null);
+
+  const lang = (localStorage.getItem('lang') as Language) || 'he';
+  const t = translations[lang] || translations['he'];
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -32,15 +38,15 @@ const BreathingExercise: React.FC<Props> = ({ onComplete }) => {
 
     switch (currentPhase) {
       case 'inhale':
-        text = 'נשמו פנימה עמוק...';
+        text = lang === 'he' ? 'נשמו פנימה עמוק...' : 'Inhale deeply...';
         duration = 4000;
         break;
       case 'hold':
-        text = 'החזיקו את האוויר...';
+        text = lang === 'he' ? 'החזיקו את האוויר...' : 'Hold your breath...';
         duration = 3000;
         break;
       case 'exhale':
-        text = 'נשפו החוצה לאט...';
+        text = lang === 'he' ? 'נשפו החוצה לאט...' : 'Exhale slowly...';
         duration = 5000;
         break;
     }
@@ -55,19 +61,20 @@ const BreathingExercise: React.FC<Props> = ({ onComplete }) => {
         runPhase('inhale');
       }
     }, duration);
-  }, []);
+  }, [lang]);
 
   const handleFinish = useCallback(() => {
     if (timerRef.current) clearTimeout(timerRef.current);
     if (countdownRef.current) clearInterval(countdownRef.current);
     ttsService.stop();
-    ttsService.speak('כל הכבוד, סיימת תרגיל נשימה מצוין.');
     statsService.addStar();
-    statsService.addToHistory('נשימות', '🌬️', 120);
-    onComplete();
-  }, [onComplete]);
+    statsService.addToHistory(t.breathing.title, '🌬️', durationMins * 60);
+    setIsFinished(true);
+  }, [onComplete, durationMins, t.breathing.title]);
 
-  const startExercise = () => {
+  const startExercise = (mins: number) => {
+    setDurationMins(mins);
+    setTimeLeft(mins * 60);
     setIsActive(true);
     runPhase('inhale');
     countdownRef.current = window.setInterval(() => {
@@ -113,27 +120,32 @@ const BreathingExercise: React.FC<Props> = ({ onComplete }) => {
 
   const getPhaseText = () => {
     switch (phase) {
-      case 'inhale': return 'שאיפה';
-      case 'hold': return 'להחזיק';
-      case 'exhale': return 'נשיפה';
+      case 'inhale': return lang === 'he' ? 'שאיפה' : 'Inhale';
+      case 'hold': return lang === 'he' ? 'להחזיק' : 'Hold';
+      case 'exhale': return lang === 'he' ? 'נשיפה' : 'Exhale';
       default: return '';
     }
   };
+
+  if (isFinished) return <CelebrationOverlay onComplete={onComplete} />;
 
   return (
     <div className={`flex flex-col items-center gap-8 w-full max-w-lg transition-colors duration-1000 p-6 rounded-[60px]`} role="region" aria-label="Breathing Exercise">
       {!isActive ? (
         <div className="bg-slate-900 p-10 rounded-[48px] shadow-2xl border-4 border-emerald-500/30 w-full text-center">
           <div className="text-7xl mb-6" aria-hidden="true">🌬️</div>
-          <p className="text-2xl text-slate-300 mb-8 font-medium">
-            תרגיל נשימה עוזר להרגיע את מערכת העצבים ולמצוא שקט פנימי.
-          </p>
-          <button 
-            onClick={startExercise}
-            className="bg-emerald-500 text-white text-3xl font-bold py-8 px-16 rounded-full shadow-2xl hover:bg-emerald-600 transition-all active:scale-95 border-b-8 border-emerald-700 focus-visible:ring-4 focus-visible:ring-emerald-400"
-          >
-            התחל נשימה (2 דק')
-          </button>
+          <h3 className="text-3xl font-bold text-white mb-8">{t.selectDuration}</h3>
+          <div className="flex flex-col gap-4">
+            {[1, 2, 5].map(m => (
+              <button 
+                key={m}
+                onClick={() => startExercise(m)}
+                className="bg-emerald-600 text-white text-3xl font-bold py-6 rounded-3xl shadow-xl active:scale-95 border-b-8 border-emerald-800"
+              >
+                {m} {t.min}
+              </button>
+            ))}
+          </div>
         </div>
       ) : (
         <div className="flex flex-col items-center w-full">
@@ -157,9 +169,11 @@ const BreathingExercise: React.FC<Props> = ({ onComplete }) => {
           
           <div className="flex flex-col gap-6 mt-8 w-full px-4">
              <button onClick={stopEarly} className="text-2xl text-slate-500 hover:text-emerald-400 underline font-bold transition-colors active:scale-95">
-              הפסק תרגיל
+              {t.back}
             </button>
-            <div className="text-slate-500 font-bold mt-2 text-center" aria-live="polite">מחזורים שהושלמו: {cyclesDone}</div>
+            <div className="text-slate-500 font-bold mt-2 text-center" aria-live="polite">
+              {lang === 'he' ? 'מחזורים שהושלמו: ' : 'Cycles completed: '} {cyclesDone}
+            </div>
           </div>
         </div>
       )}

@@ -2,8 +2,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ttsService } from '../services/ttsService';
 import { statsService } from '../services/statsService';
-import ShareButton from './ShareButton';
+import CelebrationOverlay from './CelebrationOverlay';
 import MuteToggle from './MuteToggle';
+import { Language, translations } from '../translations';
 
 interface Props {
   onComplete: () => void;
@@ -13,49 +14,71 @@ type Scene = 'beach' | 'forest' | 'meadow';
 
 const scenes = {
   beach: {
-    title: 'חוף הים',
+    titleHe: 'חוף הים',
+    titleEn: 'The Beach',
     icon: '🏖️',
     color: 'bg-cyan-500',
-    borderColor: 'border-cyan-200',
-    description: 'דמיינו את הגלים השקטים ואת החול החם תחת הרגליים.',
-    prompts: [
+    descriptionHe: 'דמיינו את הגלים השקטים ואת החול החם תחת הרגליים.',
+    descriptionEn: 'Imagine the quiet waves and the warm sand under your feet.',
+    promptsHe: [
       'דמיינו את הגלים הכחולים נשטפים לאט אל החוף.',
       'הרגישו את קרני השמש המלטפות והחמימות על עורכם.',
       'הקשיבו לקול המרגיע של המים החוזרים אל הים.'
+    ],
+    promptsEn: [
+      'Imagine the blue waves slowly washing onto the shore.',
+      'Feel the warm, caressing sunrays on your skin.',
+      'Listen to the soothing sound of the water returning to the sea.'
     ]
   },
   forest: {
-    title: 'יער ירוק',
+    titleHe: 'יער ירוק',
+    titleEn: 'Green Forest',
     icon: '🌲',
     color: 'bg-emerald-600',
-    borderColor: 'border-emerald-200',
-    description: 'נשמו את אוויר האורנים הצלול וראו את קרני השמש בין העצים.',
-    prompts: [
+    descriptionHe: 'נשמו את אוויר האורנים הצלול וראו את קרני השמש בין העצים.',
+    descriptionEn: 'Breathe the clear pine air and see the sunbeams between the trees.',
+    promptsHe: [
       'ראו את העצים הגבוהים סביבכם, שומרים עליכם בשלווה.',
       'הקשיבו לציוץ הציפורים ולרחש העלים ברוח הקלה.',
       'הרגישו את ריח האדמה והאורנים ממלא את הריאות שלכם.'
+    ],
+    promptsEn: [
+      'See the tall trees around you, keeping you in peace.',
+      'Listen to the birds chirping and the leaves rustling in the breeze.',
+      'Feel the scent of earth and pines filling your lungs.'
     ]
   },
   meadow: {
-    title: 'מרחב פתוח',
+    titleHe: 'מרחב פתוח',
+    titleEn: 'Open Meadow',
     icon: '🌻',
     color: 'bg-lime-500',
-    borderColor: 'border-lime-200',
-    description: 'שדות של פרחים צבעוניים וריח של פריחה באוויר.',
-    prompts: [
+    descriptionHe: 'שדות של פרחים צבעוניים וריח של פריחה באוויר.',
+    descriptionEn: 'Fields of colorful flowers and the scent of blossoms in the air.',
+    promptsHe: [
       'דמיינו מרחב עצום של פרחים בשלל צבעי הקשת.',
       'ראו את הפרפרים מרקדים בין הפרחים בשקט מוחלט.',
       'הרגישו את הרוח הנעימה מלטפת את הפנים שלכם.'
+    ],
+    promptsEn: [
+      'Imagine a vast expanse of flowers in all colors of the rainbow.',
+      'Watch the butterflies dancing among the flowers in absolute silence.',
+      'Feel the pleasant wind caressing your face.'
     ]
   }
 };
 
 const VisualizationExercise: React.FC<Props> = ({ onComplete }) => {
-  const [step, setStep] = useState<'setup' | 'active' | 'done'>('setup');
+  const [step, setStep] = useState<'setup' | 'active'>('setup');
+  const [isFinished, setIsFinished] = useState(false);
   const [selectedScene, setSelectedScene] = useState<Scene>('beach');
   const [durationMins, setDurationMins] = useState(2);
   const [timeLeft, setTimeLeft] = useState(0);
   const timerRef = useRef<number | null>(null);
+
+  const lang = (localStorage.getItem('lang') as Language) || 'he';
+  const t = translations[lang] || translations['he'];
 
   const startExercise = () => {
     const totalSeconds = durationMins * 60;
@@ -63,7 +86,8 @@ const VisualizationExercise: React.FC<Props> = ({ onComplete }) => {
     setStep('active');
 
     const sceneData = scenes[selectedScene];
-    ttsService.speak(`בואו נצא למסע דמיוני אל ${sceneData.title}. עיצמו עיניים בנחת ונשמו עמוק.`);
+    const title = lang === 'he' ? sceneData.titleHe : sceneData.titleEn;
+    ttsService.speak(lang === 'he' ? `בואו נצא למסע דמיוני אל ${title}. עיצמו עיניים בנחת.` : `Let's go on an imaginary journey to ${title}. Close your eyes gently.`);
 
     timerRef.current = window.setInterval(() => {
       setTimeLeft((prev) => {
@@ -74,14 +98,14 @@ const VisualizationExercise: React.FC<Props> = ({ onComplete }) => {
 
         const totalSeconds = durationMins * 60;
         const progress = (totalSeconds - prev) / totalSeconds;
+        const prompts = lang === 'he' ? sceneData.promptsHe : sceneData.promptsEn;
+        
         if (prev === totalSeconds - 10) {
-          ttsService.speak(sceneData.description);
+          ttsService.speak(lang === 'he' ? sceneData.descriptionHe : sceneData.descriptionEn);
         } else if (Math.abs(progress - 0.4) < 0.01) {
-          ttsService.speak(sceneData.prompts[0]);
+          ttsService.speak(prompts[0]);
         } else if (Math.abs(progress - 0.7) < 0.01) {
-          ttsService.speak(sceneData.prompts[1]);
-        } else if (prev === 20) {
-          ttsService.speak("לאט לאט, התחילו להרגיש את הגוף שלכם שוב על הכיסא.");
+          ttsService.speak(prompts[1]);
         }
 
         return prev - 1;
@@ -91,9 +115,9 @@ const VisualizationExercise: React.FC<Props> = ({ onComplete }) => {
 
   const handleFinish = () => {
     if (timerRef.current) clearInterval(timerRef.current);
-    ttsService.speak("חזרנו מהמסע. מקווה שאתם מרגישים רגועים יותר.");
     statsService.addStar();
-    setStep('done');
+    statsService.addToHistory(t.visualization.title, '🌅', durationMins * 60);
+    setIsFinished(true);
   };
 
   const stopEarly = () => {
@@ -115,65 +139,40 @@ const VisualizationExercise: React.FC<Props> = ({ onComplete }) => {
     };
   }, []);
 
-  if (step === 'done') {
-    return (
-      <div className="bg-slate-900 p-10 rounded-[48px] shadow-2xl border-4 border-cyan-500/30 w-full max-w-lg text-center">
-        <div className="text-7xl mb-6">{scenes[selectedScene].icon}</div>
-        <h3 className="text-4xl font-bold text-cyan-400 mb-6">המסע הסתיים</h3>
-        <p className="text-2xl text-slate-300 mb-10 leading-relaxed">
-          טיילת ב-{scenes[selectedScene].title} והרווחת כוכב שלווה.
-        </p>
-        <div className="flex flex-col gap-4">
-          <button 
-            onClick={onComplete}
-            className="bg-cyan-600 text-white text-3xl font-bold py-6 rounded-3xl shadow-xl active:scale-95 border-b-8 border-cyan-800"
-          >
-            חזרה לתפריט
-          </button>
-          <div className="flex justify-center">
-            <ShareButton text={`יצאתי למסע דמיוני ב${scenes[selectedScene].title} באפליקציית 'רגע של שלווה'! ⭐ מרגיש/ה מלא/ת אנרגיה ורוגע.`} />
-          </div>
-        </div>
-      </div>
-    );
-  }
+  if (isFinished) return <CelebrationOverlay onComplete={onComplete} />;
 
   if (step === 'setup') {
     return (
-      <div className="bg-slate-900 p-8 rounded-[40px] shadow-2xl border-4 border-cyan-500/30 w-full max-w-lg text-center">
-        <h3 className="text-3xl font-bold text-cyan-400 mb-6 underline decoration-cyan-500/20">לאן נרצה לטייל היום?</h3>
+      <div className="bg-slate-900 p-8 rounded-[48px] shadow-2xl border-4 border-cyan-500/30 w-full max-w-lg text-center">
+        <h3 className="text-3xl font-bold text-cyan-400 mb-6 underline decoration-cyan-500/20">{lang === 'he' ? 'לאן נטייל היום?' : 'Where shall we travel?'}</h3>
         
         <div className="grid grid-cols-3 gap-3 mb-8">
           {(Object.keys(scenes) as Scene[]).map((key) => (
             <button
               key={key}
               onClick={() => setSelectedScene(key)}
-              className={`flex flex-col items-center p-4 rounded-2xl border-4 transition-all ${
-                selectedScene === key ? 'border-cyan-500 bg-cyan-900/40 scale-105' : 'border-slate-800 bg-slate-900/40'
+              className={`flex flex-col items-center p-4 rounded-3xl border-4 transition-all ${
+                selectedScene === key ? 'border-cyan-500 bg-cyan-900/40 scale-105 shadow-xl' : 'border-slate-800 bg-slate-900/40'
               }`}
             >
-              <span className="text-4xl mb-2">{scenes[key].icon}</span>
-              <span className="text-lg font-bold text-slate-200">{scenes[key].title}</span>
+              <span className="text-5xl mb-2">{scenes[key].icon}</span>
+              <span className="text-lg font-bold text-slate-200">{lang === 'he' ? scenes[key].titleHe : scenes[key].titleEn}</span>
             </button>
           ))}
         </div>
 
         <div className="mb-8">
-          <p className="text-xl font-bold text-slate-300 mb-4">משך הזמן: {durationMins} דקות</p>
-          <div className="flex items-center justify-center gap-6">
-            <button 
-              onClick={() => setDurationMins(Math.max(1, durationMins - 1))}
-              className="bg-slate-800 border-2 border-slate-700 text-slate-200 w-16 h-16 rounded-full text-4xl font-bold flex items-center justify-center active:scale-90"
-            >
-              -
-            </button>
-            <div className="text-5xl font-bold text-cyan-400 px-4 w-16">{durationMins}</div>
-            <button 
-              onClick={() => setDurationMins(Math.min(5, durationMins + 1))}
-              className="bg-slate-800 border-2 border-slate-700 text-slate-200 w-16 h-16 rounded-full text-4xl font-bold flex items-center justify-center active:scale-90"
-            >
-              +
-            </button>
+          <p className="text-2xl font-bold text-slate-300 mb-4">{t.duration}: {durationMins} {t.min}</p>
+          <div className="flex flex-col gap-4">
+            {[1, 2, 5].map(m => (
+              <button 
+                key={m}
+                onClick={() => setDurationMins(m)}
+                className={`text-2xl font-bold py-4 rounded-2xl border-4 transition-all ${durationMins === m ? 'bg-cyan-600 border-cyan-400 text-white' : 'bg-slate-800 border-slate-700 text-slate-400'}`}
+              >
+                {m} {t.min}
+              </button>
+            ))}
           </div>
         </div>
 
@@ -181,7 +180,7 @@ const VisualizationExercise: React.FC<Props> = ({ onComplete }) => {
           onClick={startExercise}
           className="w-full bg-cyan-600 text-white text-3xl font-bold py-6 rounded-3xl shadow-xl active:scale-95 transition-all border-b-8 border-cyan-800"
         >
-          בואו נצא לדרך!
+          {t.start}
         </button>
       </div>
     );
@@ -197,22 +196,18 @@ const VisualizationExercise: React.FC<Props> = ({ onComplete }) => {
       </div>
 
       <div className={`w-64 h-64 rounded-full flex items-center justify-center border-8 border-slate-800 shadow-[0_0_50px_rgba(6,182,212,0.3)] ${scenes[selectedScene].color} animate-pulse transition-all duration-1000`}>
-        <span className="text-8xl">{scenes[selectedScene].icon}</span>
+        <span className="text-[120px]">{scenes[selectedScene].icon}</span>
       </div>
       
       <div>
-        <h3 className="text-4xl font-bold text-cyan-400 mb-2">{scenes[selectedScene].title}</h3>
+        <h3 className="text-4xl font-bold text-cyan-400 mb-2">{lang === 'he' ? scenes[selectedScene].titleHe : scenes[selectedScene].titleEn}</h3>
       </div>
-
-      <p className="text-2xl text-slate-300 font-medium px-4 leading-snug">
-        הקשיבו לקול והרגישו את השלווה...
-      </p>
 
       <button 
         onClick={stopEarly}
         className="text-2xl text-cyan-400 underline font-bold mt-4"
       >
-        הפסק טיול
+        {t.back}
       </button>
     </div>
   );

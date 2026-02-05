@@ -2,14 +2,15 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ttsService } from '../services/ttsService';
 import { statsService } from '../services/statsService';
-import ShareButton from './ShareButton';
+import CelebrationOverlay from './CelebrationOverlay';
 import MuteToggle from './MuteToggle';
+import { Language, translations } from '../translations';
 
 interface Props {
   onComplete: () => void;
 }
 
-const bodyParts = [
+const heBodyParts = [
   { name: 'כפות רגליים', prompt: 'שימו לב למגע של כפות הרגליים עם הרצפה. הרגישו את היציבות.' },
   { name: 'רגליים', prompt: 'העבירו את תשומת הלב לשוקיים ולירכיים. שחררו כל מתח שאתם מוצאים שם.' },
   { name: 'גב ובטן', prompt: 'הרגישו את הגב נתמך על ידי הכיסא, ואת הבטן עולה ויורדת עם הנשימה.' },
@@ -18,22 +19,37 @@ const bodyParts = [
   { name: 'פנים וראש', prompt: 'הרפו את המצח, את הלסת ואת העיניים. כל הראש רגוע.' }
 ];
 
+const enBodyParts = [
+  { name: 'Feet', prompt: 'Notice the contact of your feet with the floor. Feel the stability.' },
+  { name: 'Legs', prompt: 'Shift your attention to your calves and thighs. Release any tension you find there.' },
+  { name: 'Back & Belly', prompt: 'Feel your back supported by the chair, and your belly rising and falling with your breath.' },
+  { name: 'Hands', prompt: 'Notice your hands. Are they warm? Cold? Just observe.' },
+  { name: 'Shoulders & Neck', prompt: 'Let your shoulders drop down. Release the tension stored there.' },
+  { name: 'Face & Head', prompt: 'Relax your forehead, your jaw, and your eyes. Your whole head is calm.' }
+];
+
 const BodyScanExercise: React.FC<Props> = ({ onComplete }) => {
-  const [step, setStep] = useState<'setup' | 'active' | 'done'>('setup');
+  const [step, setStep] = useState<'setup' | 'active'>('setup');
+  const [isFinished, setIsFinished] = useState(false);
   const [durationMins, setDurationMins] = useState(3);
   const [timeLeft, setTimeLeft] = useState(0);
   const [currentPartIndex, setCurrentPartIndex] = useState(-1);
   const timerRef = useRef<number | null>(null);
 
-  const startExercise = () => {
-    const totalSeconds = durationMins * 60;
+  const lang = (localStorage.getItem('lang') as Language) || 'he';
+  const t = translations[lang] || translations['he'];
+  const activeParts = lang === 'he' ? heBodyParts : enBodyParts;
+
+  const startExercise = (mins: number) => {
+    setDurationMins(mins);
+    const totalSeconds = mins * 60;
     setTimeLeft(totalSeconds);
     setStep('active');
     setCurrentPartIndex(-1);
 
-    ttsService.speak("בואו נתחיל בסריקת גוף. שבו בנוח ועיצמו עיניים.");
+    ttsService.speak(lang === 'he' ? "בואו נתחיל בסריקת גוף. שבו בנוח." : "Let's start the body scan. Sit comfortably.");
 
-    const partInterval = Math.floor(totalSeconds / (bodyParts.length + 1));
+    const partInterval = Math.floor(totalSeconds / (activeParts.length + 1));
 
     timerRef.current = window.setInterval(() => {
       setTimeLeft((prev) => {
@@ -42,13 +58,12 @@ const BodyScanExercise: React.FC<Props> = ({ onComplete }) => {
           return 0;
         }
 
-        const totalSeconds = durationMins * 60;
-        const elapsed = totalSeconds - prev;
+        const elapsed = (mins * 60) - prev;
         const newPartIndex = Math.floor(elapsed / partInterval) - 1;
 
-        if (newPartIndex >= 0 && newPartIndex < bodyParts.length && newPartIndex !== currentPartIndex) {
+        if (newPartIndex >= 0 && newPartIndex < activeParts.length && newPartIndex !== currentPartIndex) {
           setCurrentPartIndex(newPartIndex);
-          ttsService.speak(bodyParts[newPartIndex].prompt);
+          ttsService.speak(activeParts[newPartIndex].prompt);
         }
 
         return prev - 1;
@@ -58,9 +73,9 @@ const BodyScanExercise: React.FC<Props> = ({ onComplete }) => {
 
   const handleFinish = () => {
     if (timerRef.current) clearInterval(timerRef.current);
-    ttsService.speak("סריקת הגוף הסתיימה. הרגישו את השלווה בכל הגוף.");
     statsService.addStar();
-    setStep('done');
+    statsService.addToHistory(t.bodyScan.title, '👤', durationMins * 60);
+    setIsFinished(true);
   };
 
   const stopEarly = () => {
@@ -82,64 +97,24 @@ const BodyScanExercise: React.FC<Props> = ({ onComplete }) => {
     };
   }, []);
 
-  if (step === 'done') {
-    return (
-      <div className="bg-slate-900 p-10 rounded-[48px] shadow-2xl border-4 border-indigo-500/30 w-full max-w-lg text-center">
-        <div className="text-7xl mb-6">👤</div>
-        <h3 className="text-4xl font-bold text-indigo-400 mb-6">הגוף רגוע ושלו</h3>
-        <p className="text-2xl text-slate-300 mb-10 leading-relaxed">
-          סיימת סריקת גוף מלאה. הגוף והנפש שלך מודים לך.
-        </p>
-        <div className="flex flex-col gap-4">
-          <button 
-            onClick={onComplete}
-            className="bg-indigo-600 text-white text-3xl font-bold py-6 rounded-3xl shadow-xl active:scale-95 border-b-8 border-indigo-800"
-          >
-            חזרה לתפריט
-          </button>
-          <div className="flex justify-center">
-            <ShareButton text={`עברתי סריקת גוף משחררת ב'רגע של שלווה'! ⭐ מרגיש/ה הרבה פחות מתח.`} />
-          </div>
-        </div>
-      </div>
-    );
-  }
+  if (isFinished) return <CelebrationOverlay onComplete={onComplete} />;
 
   if (step === 'setup') {
     return (
-      <div className="bg-slate-900 p-8 rounded-[40px] shadow-2xl border-4 border-indigo-500/30 w-full max-w-lg text-center">
-        <div className="text-6xl mb-6">🧘‍♂️</div>
-        <h3 className="text-3xl font-bold text-indigo-400 mb-6 underline decoration-indigo-500/20">סריקת גוף מרגיעה</h3>
-        
-        <p className="text-xl text-slate-300 mb-8 leading-relaxed">
-          בתרגיל זה נעבור איבר איבר בגוף ונלמד לשחרר מתחים. 
-        </p>
-
-        <div className="mb-10">
-          <p className="text-xl font-bold text-slate-200 mb-4">בחר משך זמן: {durationMins} דקות</p>
-          <div className="flex items-center justify-center gap-6">
+      <div className="bg-slate-900 p-10 rounded-[48px] shadow-2xl border-4 border-indigo-500/30 w-full max-w-lg text-center">
+        <div className="text-7xl mb-6" aria-hidden="true">👤</div>
+        <h3 className="text-3xl font-bold text-white mb-8">{t.selectDuration}</h3>
+        <div className="flex flex-col gap-4">
+          {[2, 3, 5, 10].map(m => (
             <button 
-              onClick={() => setDurationMins(Math.max(2, durationMins - 1))}
-              className="bg-slate-800 border-2 border-slate-700 text-slate-100 w-16 h-16 rounded-full text-4xl font-bold flex items-center justify-center active:scale-90"
+              key={m}
+              onClick={() => startExercise(m)}
+              className="bg-indigo-600 text-white text-3xl font-bold py-6 rounded-3xl shadow-xl active:scale-95 border-b-8 border-indigo-800"
             >
-              -
+              {m} {t.min}
             </button>
-            <div className="text-5xl font-bold text-indigo-400 px-4 w-16">{durationMins}</div>
-            <button 
-              onClick={() => setDurationMins(Math.min(10, durationMins + 1))}
-              className="bg-slate-800 border-2 border-slate-700 text-slate-100 w-16 h-16 rounded-full text-4xl font-bold flex items-center justify-center active:scale-90"
-            >
-              +
-            </button>
-          </div>
+          ))}
         </div>
-
-        <button 
-          onClick={startExercise}
-          className="w-full bg-indigo-600 text-white text-3xl font-bold py-6 rounded-3xl shadow-xl active:scale-95 transition-all border-b-8 border-indigo-800"
-        >
-          התחל סריקה
-        </button>
       </div>
     );
   }
@@ -159,7 +134,7 @@ const BodyScanExercise: React.FC<Props> = ({ onComplete }) => {
         <div 
           className="absolute left-0 right-0 h-4 bg-indigo-400 shadow-[0_0_20px_#818cf8] transition-all duration-1000 ease-in-out z-20"
           style={{ 
-            top: `${(currentPartIndex + 1) * (100 / (bodyParts.length + 1))}%`,
+            top: `${(currentPartIndex + 1) * (100 / (activeParts.length + 1))}%`,
             display: currentPartIndex === -1 ? 'none' : 'block'
           }}
         ></div>
@@ -167,19 +142,19 @@ const BodyScanExercise: React.FC<Props> = ({ onComplete }) => {
       
       <div>
         <h3 className="text-3xl font-bold text-indigo-400 mb-2">
-          {currentPartIndex === -1 ? 'מתכוננים...' : bodyParts[currentPartIndex].name}
+          {currentPartIndex === -1 ? (lang === 'he' ? 'מתכוננים...' : 'Preparing...') : activeParts[currentPartIndex].name}
         </h3>
       </div>
 
       <p className="text-2xl text-slate-300 font-medium px-4 h-24 flex items-center justify-center leading-tight">
-        {currentPartIndex === -1 ? 'שימו לב לנשימה שלכם' : bodyParts[currentPartIndex].prompt}
+        {currentPartIndex === -1 ? (lang === 'he' ? 'שימו לב לנשימה' : 'Observe your breath') : activeParts[currentPartIndex].prompt}
       </p>
 
       <button 
         onClick={stopEarly}
         className="text-2xl text-indigo-400 underline font-bold mt-4"
       >
-        הפסק תרגיל
+        {t.back}
       </button>
     </div>
   );

@@ -10,6 +10,7 @@ import BodyScanExercise from './components/BodyScanExercise';
 import MindfulEatingExercise from './components/MindfulEatingExercise';
 import WalkingMeditationExercise from './components/WalkingMeditationExercise';
 import HistoryView from './components/HistoryView';
+import NewsCard from './components/NewsCard';
 import { ExerciseType } from './types';
 import { statsService } from './services/statsService';
 import { translations, Language } from './translations';
@@ -196,6 +197,8 @@ const App: React.FC = () => {
               <p className="text-2xl text-center text-slate-400 font-bold">
                 {t.selectEx}
               </p>
+
+              <NewsCard />
             </div>
           </Layout>
         );

@@ -2,8 +2,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ttsService } from '../services/ttsService';
 import { statsService } from '../services/statsService';
-import ShareButton from './ShareButton';
+import CelebrationOverlay from './CelebrationOverlay';
 import MuteToggle from './MuteToggle';
+import { Language, translations } from '../translations';
 
 interface Props {
   onComplete: () => void;
@@ -12,17 +13,20 @@ interface Props {
 const MeditationExercise: React.FC<Props> = ({ onComplete }) => {
   const [timeLeft, setTimeLeft] = useState(0);
   const [isActive, setIsActive] = useState(false);
-  const [isDone, setIsDone] = useState(false);
+  const [isFinished, setIsFinished] = useState(false);
   const [selectedDuration, setSelectedDuration] = useState(0);
   const timerRef = useRef<number | null>(null);
+
+  const lang = (localStorage.getItem('lang') as Language) || 'he';
+  const t = translations[lang] || translations['he'];
 
   const startMeditation = (seconds: number) => {
     setSelectedDuration(seconds);
     setTimeLeft(seconds);
     setIsActive(true);
-    setIsDone(false);
+    setIsFinished(false);
     
-    ttsService.speak("מצאו תנוחה נוחה. עצמו עיניים בנחת או הביטו בנקודה אחת.");
+    ttsService.speak(lang === 'he' ? "מצאו תנוחה נוחה. עצמו עיניים בנחת." : "Find a comfortable position. Close your eyes gently.");
     
     timerRef.current = window.setInterval(() => {
       setTimeLeft((prev) => {
@@ -32,11 +36,11 @@ const MeditationExercise: React.FC<Props> = ({ onComplete }) => {
         }
         
         if (prev === Math.floor(seconds * 0.75)) {
-          ttsService.speak("שימו לב למגע של הגוף עם הכיסא.");
+          ttsService.speak(lang === 'he' ? "שימו לב למגע של הגוף עם הכיסא." : "Notice the contact between your body and the chair.");
         } else if (prev === Math.floor(seconds * 0.5)) {
-          ttsService.speak("הקשיבו לצלילים הרחוקים בחדר.");
+          ttsService.speak(lang === 'he' ? "הקשיבו לצלילים הרחוקים בחדר." : "Listen to the distant sounds in the room.");
         } else if (prev === Math.floor(seconds * 0.25)) {
-          ttsService.speak("חייכו חיוך קטן לעצמכם.");
+          ttsService.speak(lang === 'he' ? "חייכו חיוך קטן לעצמכם." : "Give yourself a small smile.");
         }
         
         return prev - 1;
@@ -46,17 +50,15 @@ const MeditationExercise: React.FC<Props> = ({ onComplete }) => {
 
   const handleFinish = (seconds: number) => {
     if (timerRef.current) clearInterval(timerRef.current);
-    setIsActive(false);
-    setIsDone(true);
-    ttsService.speak("חזרו לאט לרגע הזה. הרווחתם כוכב שלווה.");
     statsService.addStar();
-    statsService.addToHistory('מדיטציה', '🧘', seconds);
+    statsService.addToHistory(t.meditation.title, '🧘', seconds);
+    setIsFinished(true);
   };
 
   const stopEarly = () => {
     if (timerRef.current) clearInterval(timerRef.current);
     setIsActive(false);
-    setIsDone(false);
+    setIsFinished(false);
     ttsService.stop();
   };
 
@@ -73,53 +75,24 @@ const MeditationExercise: React.FC<Props> = ({ onComplete }) => {
     return `${mins}:${secs.toString().padStart(2, '0')}`;
   };
 
-  if (isDone) {
-    return (
-      <div className="bg-slate-900 p-10 rounded-[48px] shadow-2xl border-4 border-emerald-500/30 w-full max-w-lg text-center animate-in zoom-in-75 duration-300">
-        <div className="text-7xl mb-6" aria-hidden="true">🧘</div>
-        <h3 className="text-4xl font-bold text-emerald-400 mb-6">מדיטציה הושלמה</h3>
-        <p className="text-2xl text-slate-300 mb-10 leading-relaxed">
-          איזה יופי. הקדשת זמן לעצמך ולשלווה הפנימית שלך.
-        </p>
-        <div className="flex flex-col gap-4">
-          <button 
-            onClick={onComplete}
-            className="bg-emerald-600 text-white text-3xl font-bold py-6 rounded-3xl shadow-xl active:scale-95 border-b-8 border-emerald-800 focus-visible:ring-4 focus-visible:ring-emerald-400"
-          >
-            חזרה לתפריט
-          </button>
-          <div className="flex justify-center">
-            <ShareButton text={`הקדשתי זמן למדיטציית שלווה ב'רגע של שלווה'! ⭐ מרגיש/ה רגוע/ה וממוקד/ת.`} />
-          </div>
-        </div>
-      </div>
-    );
-  }
+  if (isFinished) return <CelebrationOverlay onComplete={onComplete} />;
 
   return (
     <div className="flex flex-col items-center gap-8 w-full max-w-lg" role="region" aria-label="Meditation Exercise">
       {!isActive ? (
-        <div className="bg-slate-900 p-8 rounded-[40px] shadow-2xl border-4 border-purple-500/30 w-full text-center">
-          <h3 className="text-3xl font-bold text-purple-400 mb-8 underline decoration-purple-500/30">כמה זמן נרצה למדוט?</h3>
+        <div className="bg-slate-900 p-10 rounded-[48px] shadow-2xl border-4 border-purple-500/30 w-full text-center">
+          <div className="text-7xl mb-6" aria-hidden="true">🧘</div>
+          <h3 className="text-3xl font-bold text-white mb-8">{t.selectDuration}</h3>
           <div className="flex flex-col gap-4">
-            <button 
-              onClick={() => startMeditation(30)}
-              className="bg-purple-900/40 border-4 border-purple-400 text-purple-100 text-2xl font-bold py-6 rounded-2xl active:scale-95 transition-transform focus-visible:ring-4 focus-visible:ring-purple-400"
-            >
-              30 שניות של שקט
-            </button>
-            <button 
-              onClick={() => startMeditation(60)}
-              className="bg-purple-600 text-white text-2xl font-bold py-6 rounded-2xl shadow-lg active:scale-95 border-b-8 border-purple-800 focus-visible:ring-4 focus-visible:ring-purple-400"
-            >
-              דקה אחת של שלווה
-            </button>
-            <button 
-              onClick={() => startMeditation(180)}
-              className="bg-purple-800 text-white text-2xl font-bold py-6 rounded-2xl shadow-lg active:scale-95 border-b-8 border-purple-900 focus-visible:ring-4 focus-visible:ring-purple-400"
-            >
-              שלוש דקות של רוגע
-            </button>
+            {[60, 180, 300].map(s => (
+              <button 
+                key={s}
+                onClick={() => startMeditation(s)}
+                className="bg-purple-600 text-white text-3xl font-bold py-6 rounded-3xl shadow-xl active:scale-95 border-b-8 border-purple-800 focus-visible:ring-4 focus-visible:ring-purple-400"
+              >
+                {s / 60} {t.min}
+              </button>
+            ))}
           </div>
         </div>
       ) : (
@@ -132,7 +105,7 @@ const MeditationExercise: React.FC<Props> = ({ onComplete }) => {
           </div>
 
           <div className="relative flex items-center justify-center" aria-hidden="true">
-             <div className="absolute w-64 h-64 bg-purple-500/20 rounded-full animate-ping"></div>
+             <div className="absolute w-64 h-64 bg-purple-500/20 rounded-full celebrate-ping"></div>
              <div className="absolute w-48 h-48 bg-purple-500/30 rounded-full animate-pulse"></div>
              
              <div className="z-10 bg-slate-900 border-8 border-purple-500 w-48 h-48 rounded-full flex items-center justify-center shadow-2xl">
@@ -143,15 +116,14 @@ const MeditationExercise: React.FC<Props> = ({ onComplete }) => {
           </div>
 
           <div className="text-center px-4" aria-live="polite">
-            <p className="text-3xl font-bold text-purple-400 mb-4">פשוט להיות...</p>
-            <p className="text-xl text-slate-400">הקשיבו להנחיות הקוליות</p>
+            <p className="text-4xl font-bold text-purple-400 mb-4">{lang === 'he' ? 'פשוט להיות...' : 'Just be...'}</p>
           </div>
 
           <button 
             onClick={stopEarly}
             className="text-2xl text-purple-400 underline font-medium mt-4 active:scale-95"
           >
-            הפסק מדיטציה
+            {t.back}
           </button>
         </div>
       )}
