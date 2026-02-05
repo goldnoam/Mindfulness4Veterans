@@ -5,6 +5,7 @@ import { statsService } from '../services/statsService';
 import CelebrationOverlay from './CelebrationOverlay';
 import MuteToggle from './MuteToggle';
 import { Language, translations } from '../translations';
+import AdBanner from './AdBanner';
 
 interface Props {
   onComplete: () => void;
@@ -12,14 +13,14 @@ interface Props {
 
 type Phase = 'ready' | 'inhale' | 'hold' | 'exhale';
 
-const MAX_CYCLES = 3;
-
 const BreathingExercise: React.FC<Props> = ({ onComplete }) => {
   const [phase, setPhase] = useState<Phase>('ready');
   const [isActive, setIsActive] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
   const [isFinished, setIsFinished] = useState(false);
   const [cyclesDone, setCyclesDone] = useState(0);
+  const [maxCycles, setMaxCycles] = useState(1); // User chosen repeats
+  
   const timerRef = useRef<number | null>(null);
   const cycleCountRef = useRef(0);
   const phaseStartTimeRef = useRef<number>(0);
@@ -33,9 +34,9 @@ const BreathingExercise: React.FC<Props> = ({ onComplete }) => {
     if (timerRef.current) clearTimeout(timerRef.current);
     ttsService.stop();
     statsService.addStar();
-    statsService.addToHistory(t.breathing.title, '🌬️', 60);
+    statsService.addToHistory(t.breathing.title, '🌬️', 60 * maxCycles);
     setIsFinished(true);
-  }, [t.breathing.title]);
+  }, [t.breathing.title, maxCycles]);
 
   const runPhase = useCallback((currentPhase: 'inhale' | 'hold' | 'exhale', duration?: number) => {
     if (!isActive) return;
@@ -75,14 +76,17 @@ const BreathingExercise: React.FC<Props> = ({ onComplete }) => {
         cycleCountRef.current += 1;
         setCyclesDone(cycleCountRef.current);
         
-        if (cycleCountRef.current >= MAX_CYCLES) {
+        // Multi-cycle logic: repeat 3 breaths * maxCycles
+        // Actually the original request said "repeat the exercise up to 3 times"
+        // In breathing, one exercise = 3 breaths.
+        if (cycleCountRef.current >= 3 * maxCycles) {
           handleFinish();
         } else {
           runPhase('inhale');
         }
       }
     }, phaseDuration);
-  }, [lang, isActive, handleFinish]);
+  }, [lang, isActive, handleFinish, maxCycles]);
 
   const startExercise = () => {
     cycleCountRef.current = 0;
@@ -94,13 +98,11 @@ const BreathingExercise: React.FC<Props> = ({ onComplete }) => {
 
   const togglePause = () => {
     if (isPaused) {
-      // Resume
       setIsPaused(false);
       if (currentPhaseRef.current) {
         runPhase(currentPhaseRef.current, remainingInPhaseRef.current);
       }
     } else {
-      // Pause
       setIsPaused(true);
       if (timerRef.current) clearTimeout(timerRef.current);
       const elapsed = Date.now() - phaseStartTimeRef.current;
@@ -165,14 +167,29 @@ const BreathingExercise: React.FC<Props> = ({ onComplete }) => {
         <div className="bg-slate-900 p-10 rounded-[48px] shadow-2xl border-4 border-emerald-500/30 w-full text-center">
           <div className="text-7xl mb-6" aria-hidden="true">🌬️</div>
           <h3 className="text-4xl font-bold text-white mb-4">
-            {lang === 'he' ? 'תרגיל 3 נשימות' : '3-Breaths Exercise'}
+            {lang === 'he' ? 'תרגיל נשימה' : 'Breathing Exercise'}
           </h3>
-          <p className="text-2xl text-slate-400 mb-8 font-medium">
-            {lang === 'he' ? 'בואו ניקח רגע לנשימה עמוקה ומרגיעה.' : 'Let’s take a moment for deep, relaxing breaths.'}
-          </p>
+          
+          <div className="mb-8">
+            <p className="text-2xl font-bold text-slate-300 mb-4">{t.cycles}</p>
+            <div className="flex gap-4 justify-center">
+              {[1, 2, 3].map(c => (
+                <button 
+                  key={c}
+                  onClick={() => { setMaxCycles(c); ttsService.speak(c.toString()); }}
+                  className={`w-20 h-20 rounded-2xl border-4 text-3xl font-black transition-all shadow-lg active:scale-95 ${maxCycles === c ? 'bg-emerald-500 border-emerald-300 text-white' : 'bg-slate-800 border-slate-700 text-slate-500'}`}
+                >
+                  {c}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <AdBanner slot="exercise-setup-ad" />
+
           <button 
             onClick={startExercise}
-            className="w-full bg-emerald-600 text-white text-4xl font-black py-8 rounded-3xl shadow-xl active:scale-95 border-b-8 border-emerald-800 transition-all"
+            className="w-full bg-emerald-600 text-white text-4xl font-black py-8 rounded-3xl shadow-xl active:scale-95 border-b-8 border-emerald-800 transition-all mt-4"
           >
             {t.start}
           </button>
@@ -181,7 +198,7 @@ const BreathingExercise: React.FC<Props> = ({ onComplete }) => {
         <div className="flex flex-col items-center w-full">
           <div className="flex items-center justify-between w-full px-6 mb-4">
              <div className="bg-slate-800 px-6 py-2 rounded-2xl border-2 border-emerald-500/30 text-3xl font-bold text-emerald-400 tabular-nums shadow-lg">
-                {cyclesDone + 1} / {MAX_CYCLES}
+                {Math.floor(cyclesDone / 3) + 1} / {maxCycles}
              </div>
              <div className="flex gap-4">
                <button 

@@ -32,7 +32,10 @@ const SoundMeditationExercise: React.FC<Props> = ({ onComplete }) => {
   const [timeLeft, setTimeLeft] = useState(0);
   const [durationMins, setDurationMins] = useState(3);
   const [currentPromptIdx, setCurrentPromptIdx] = useState(0);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  
   const timerRef = useRef<number | null>(null);
+  const currentIdxRef = useRef<number>(0);
 
   const lang = (localStorage.getItem('lang') as Language) || 'he';
   const t = translations[lang] || translations['he'];
@@ -43,9 +46,15 @@ const SoundMeditationExercise: React.FC<Props> = ({ onComplete }) => {
     const totalSecs = mins * 60;
     setTimeLeft(totalSecs);
     setIsActive(true);
-    setCurrentPromptIdx(0);
+    currentIdxRef.current = -1; // Reset ref
+    setCurrentPromptIdx(-1);
+
+    const initialGreeting = lang === 'he' 
+      ? "מדיטציית צליל. עצמו עיניים והתמקדו בשמיעה. בין ההנחיות יהיה זמן שקט להקשבה." 
+      : "Sound meditation. Close your eyes and focus on your hearing. Between prompts, there will be silent time for listening.";
     
-    ttsService.speak(lang === 'he' ? "מדיטציית צליל. עיצמו עיניים והתמקדו בשמיעה." : "Sound meditation. Close your eyes and focus on your hearing.");
+    setIsSpeaking(true);
+    ttsService.speak(initialGreeting, () => setIsSpeaking(false));
 
     const intervalSecs = Math.floor(totalSecs / activePrompts.length);
 
@@ -59,9 +68,15 @@ const SoundMeditationExercise: React.FC<Props> = ({ onComplete }) => {
 
         const elapsed = (mins * 60) - prev;
         const newIdx = Math.floor(elapsed / intervalSecs);
-        if (newIdx < activePrompts.length && newIdx !== currentPromptIdx) {
+
+        // ONLY trigger if the index has changed and is within bounds
+        if (newIdx < activePrompts.length && newIdx !== currentIdxRef.current) {
+          currentIdxRef.current = newIdx;
           setCurrentPromptIdx(newIdx);
-          ttsService.speak(activePrompts[newIdx]);
+          setIsSpeaking(true);
+          ttsService.speak(activePrompts[newIdx], () => {
+            setIsSpeaking(false);
+          });
         }
 
         return prev - 1;
@@ -136,14 +151,22 @@ const SoundMeditationExercise: React.FC<Props> = ({ onComplete }) => {
           <div className="relative flex items-center justify-center h-48 mb-6">
              <div className="absolute w-40 h-40 bg-violet-500/20 rounded-full animate-ping"></div>
              <div className="absolute w-32 h-32 bg-violet-500/40 rounded-full animate-pulse"></div>
-             <div className="text-8xl z-10">🎧</div>
+             <div className="text-8xl z-10">{isSpeaking ? '🗣️' : '👂'}</div>
           </div>
 
-          <p className="text-3xl leading-relaxed text-slate-100 mb-10 h-32 flex items-center justify-center italic">
-            "{activePrompts[currentPromptIdx]}"
-          </p>
+          <div className="h-32 flex flex-col items-center justify-center">
+            {isSpeaking ? (
+               <p className="text-3xl leading-relaxed text-slate-100 italic transition-all duration-500">
+                "{currentPromptIdx >= 0 ? activePrompts[currentPromptIdx] : ''}"
+               </p>
+            ) : (
+              <p className="text-4xl font-black text-violet-400 animate-pulse uppercase tracking-widest">
+                {lang === 'he' ? 'פשוט להקשיב...' : 'Just listen...'}
+              </p>
+            )}
+          </div>
 
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-4 mt-8">
             <button onClick={restartExercise} className="bg-slate-800 border-4 border-violet-500/50 text-violet-400 px-10 py-4 rounded-3xl text-2xl font-bold shadow-xl active:scale-95 transition-all">
                🔄 {t.restart}
             </button>
