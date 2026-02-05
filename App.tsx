@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import Layout from './components/Layout';
 import BreathingExercise from './components/BreathingExercise';
@@ -17,6 +18,7 @@ import NewsCard from './components/NewsCard';
 import AdBanner from './components/AdBanner';
 import { ExerciseType } from './types';
 import { statsService } from './services/statsService';
+import { audioService } from './services/audioService';
 import { translations, Language } from './translations';
 import { ttsService } from './services/ttsService';
 
@@ -37,7 +39,20 @@ const App: React.FC = () => {
       const storedLang = localStorage.getItem('lang') as Language;
       if (storedLang && storedLang !== lang) setLang(storedLang);
     }, 500);
-    return () => clearInterval(interval);
+
+    // Global click listener for subtle UI sounds
+    const handleGlobalClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (target.closest('button')) {
+        audioService.playClickSound();
+      }
+    };
+    window.addEventListener('mousedown', handleGlobalClick);
+
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('mousedown', handleGlobalClick);
+    };
   }, [lang]);
 
   useEffect(() => {
