@@ -57,7 +57,7 @@ const scenes: Record<Scene, any> = {
     titleEn: 'Open Meadow',
     icon: '🌻',
     color: 'bg-lime-500',
-    ambientMode: 'forest' as AmbientSoundMode, // Using forest for meadow as it has wind/nature vibes
+    ambientMode: 'butterflies' as AmbientSoundMode,
     descriptionHe: 'שדות של פרחים צבעוניים וריח של פריחה באוויר.',
     descriptionEn: 'Fields of colorful flowers and the scent of blossoms in the air.',
     promptsHe: [
@@ -92,7 +92,6 @@ const VisualizationExercise: React.FC<Props> = ({ onComplete }) => {
     const sceneData = scenes[selectedScene];
     const title = lang === 'he' ? sceneData.titleHe : sceneData.titleEn;
     
-    // Start ambient sound automatically for immersion
     ambientService.setMode(sceneData.ambientMode);
     
     ttsService.speak(lang === 'he' ? `בואו נצא למסע דמיוני אל ${title}. עיצמו עיניים בנחת.` : `Let's go on an imaginary journey to ${title}. Close your eyes gently.`);
@@ -125,7 +124,6 @@ const VisualizationExercise: React.FC<Props> = ({ onComplete }) => {
   const restartExercise = () => {
     if (timerRef.current) clearInterval(timerRef.current);
     ttsService.stop();
-    // ambientService is handled by startExercise
     startExercise();
   };
 
@@ -154,7 +152,6 @@ const VisualizationExercise: React.FC<Props> = ({ onComplete }) => {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
       ttsService.stop();
-      // Ensure sound stops if component unmounts
       ambientService.setMode('off');
     };
   }, []);

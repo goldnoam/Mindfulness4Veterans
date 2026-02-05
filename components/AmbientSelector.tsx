@@ -37,7 +37,8 @@ const AmbientSelector: React.FC = () => {
     { mode: 'rain', icon: '🌧️', label: t.rain },
     { mode: 'waves', icon: '🌊', label: t.waves },
     { mode: 'forest', icon: '🌲', label: t.forest },
-    { mode: 'yoga', icon: '🧘', label: t.yoga }
+    { mode: 'yoga', icon: '🧘', label: t.yoga },
+    { mode: 'butterflies', icon: '🦋', label: t.butterflies }
   ];
 
   return (
