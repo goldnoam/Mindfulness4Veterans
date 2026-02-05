@@ -1,16 +1,21 @@
 
 {
-  "name": "mindfulness-seniors-production",
+  "name": "moment-of-peace-seniors",
   "version": "1.0.0",
   "private": true,
   "dependencies": {
-    "@google/genai": "^1.0.0",
     "react": "^19.2.4",
     "react-dom": "^19.2.4"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.14",
     "postcss": "^8.4.24",
-    "tailwindcss": "^3.3.2"
+    "tailwindcss": "^3.3.2",
+    "vite": "^6.0.0"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
   }
 }

@@ -1,27 +1,36 @@
 
 <!DOCTYPE html>
-<html lang="he">
+<html lang="he" dir="rtl">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Moment of Peace - Mindfulness for Seniors</title>
-    <meta name="description" content="Accessible mindfulness app tailored for seniors. Breathing, meditation, and mindful eating exercises for free." />
-    <meta name="keywords" content="mindfulness, seniors, breathing, peace, meditation, mindful eating, mental health" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+    <title>רגע של שלווה - מיינדפולנס לגיל השלישי</title>
+    <meta name="description" content="אפליקציית מיינדפולנס נגישה וצבעונית המיועדת לגיל השלישי. תרגילי נשימה, מדיטציה והכרת תודה ללא עלות." />
+    <meta name="keywords" content="מיינדפולנס, גיל שלישי, נשימות, שלווה, מדיטציה, בריאות הנפש" />
+    <meta name="author" content="Noam Gold AI" />
+    <!-- SEO & Social Media -->
+    <meta property="og:title" content="רגע של שלווה - מיינדפולנס לגיל השלישי" />
+    <meta property="og:description" content="תרגילי רוגע ונשימה פשוטים ונגישים לכולם." />
+    <meta property="og:type" content="website" />
+    
     <link rel="icon" type="image/png" href="https://cdn-icons-png.flaticon.com/512/3209/3209941.png" />
     <link rel="manifest" href="manifest.json">
     <link href="https://fonts.googleapis.com/css2?family=Assistant:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="index.css">
     <script type="importmap">
-    {
-      "imports": {
-        "react/": "https://esm.sh/react@^19.2.4/",
-        "react": "https://esm.sh/react@^19.2.4",
-        "react-dom/": "https://esm.sh/react-dom@^19.2.4/"
-      }
-    }
-    </script>
+{
+  "imports": {
+    "react": "https://esm.sh/react@^19.2.4",
+    "react-dom": "https://esm.sh/react-dom@^19.2.4",
+    "react-dom/client": "https://esm.sh/react-dom@^19.2.4/client",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.4/",
+    "react/": "https://esm.sh/react@^19.2.4/"
+  }
+}
+</script>
   </head>
-  <body>
+  <body class="bg-slate-950">
     <div id="root"></div>
+    <script type="module" src="index.tsx"></script>
   </body>
 </html>

@@ -1,17 +1,18 @@
 
 {
   "name": "רגע של שלווה",
-  "short_name": "שלווה",
-  "description": "משחק מיינדפולנס לגיל השלישי",
-  "start_url": ".",
+  "short_name": "שלוווה",
+  "description": "תרגילי מיינדפולנס נגישים למבוגרים",
+  "start_url": "/",
   "display": "standalone",
-  "background_color": "#f0fdf4",
+  "background_color": "#020617",
   "theme_color": "#10b981",
   "icons": [
     {
       "src": "https://cdn-icons-png.flaticon.com/512/3209/3209941.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
