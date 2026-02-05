@@ -6,7 +6,7 @@ import { ttsService } from '../services/ttsService';
 
 const AmbientSelector: React.FC = () => {
   const [currentMode, setCurrentMode] = useState<AmbientSoundMode>(ambientService.getMode());
-  const [volume, setVolume] = useState(0.3);
+  const [volume, setVolume] = useState(0.15);
   const [lang, setLang] = useState<Language>((localStorage.getItem('lang') as Language) || 'he');
 
   useEffect(() => {
@@ -17,7 +17,7 @@ const AmbientSelector: React.FC = () => {
     return () => clearInterval(interval);
   }, [lang]);
 
-  const t = translations[lang];
+  const t = translations[lang] || translations['he'];
 
   const handleModeChange = (mode: AmbientSoundMode) => {
     ambientService.setMode(mode);
@@ -42,37 +42,34 @@ const AmbientSelector: React.FC = () => {
   ];
 
   return (
-    <div className="flex flex-col gap-3 bg-slate-800 border-2 border-slate-700 p-4 rounded-3xl shadow-xl">
-      <div className="flex items-center justify-between gap-4">
-        <label className="text-sm font-bold text-slate-400">{t.ambient}</label>
-        <div className="flex gap-2 flex-wrap justify-end">
-          {options.map((opt) => (
-            <button
-              key={opt.mode}
-              onClick={() => handleModeChange(opt.mode)}
-              className={`w-12 h-12 flex items-center justify-center rounded-full text-2xl transition-all border-2 ${
-                currentMode === opt.mode 
-                  ? 'bg-blue-500 border-blue-400 text-white shadow-[0_0_15px_rgba(59,130,246,0.5)]' 
-                  : 'bg-slate-700 border-slate-600 text-slate-400 grayscale hover:grayscale-0'
-              }`}
-              title={opt.label}
-              aria-label={opt.label}
-            >
-              {opt.icon}
-            </button>
-          ))}
-        </div>
+    <div className="flex flex-col gap-2 p-1">
+      <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1">
+        {options.map((opt) => (
+          <button
+            key={opt.mode}
+            onClick={() => handleModeChange(opt.mode)}
+            className={`flex-shrink-0 w-14 h-14 flex items-center justify-center rounded-2xl text-2xl transition-all border-4 ${
+              currentMode === opt.mode 
+                ? 'bg-emerald-500 border-emerald-300 text-white shadow-lg scale-105' 
+                : 'bg-slate-800 border-slate-700 text-slate-400'
+            }`}
+            title={opt.label}
+            aria-label={opt.label}
+          >
+            {opt.icon}
+          </button>
+        ))}
       </div>
-      <div className="flex items-center gap-3">
+      <div className="flex items-center gap-3 px-2">
         <span className="text-xl">🔈</span>
         <input
           type="range"
           min="0"
-          max="0.8"
+          max="0.5"
           step="0.01"
           value={volume}
           onChange={handleVolume}
-          className="flex-1 accent-blue-500 h-8"
+          className="flex-1 accent-emerald-500 h-8"
         />
         <span className="text-xl">🔊</span>
       </div>

@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -17,15 +18,23 @@
     font-family: 'Assistant', sans-serif;
   }
   
-  /* Light Theme Overrides */
   .light-theme {
     @apply bg-slate-50 text-slate-900;
   }
 
-  /* Global Font Size Scale Classes - Adjusted for Seniors */
   .font-scale-small { --app-font-scale: 0.95; }
   .font-scale-medium { --app-font-scale: 1.15; }
   .font-scale-large { --app-font-scale: 1.45; }
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }
 
 @layer components {
@@ -87,7 +96,6 @@
     50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.5; }
   }
 
-  /* Shutter and Viewfinder Animations */
   .animate-shutter {
     animation: shutter 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
   }
@@ -102,7 +110,6 @@
     @apply absolute w-8 h-8 border-slate-500 opacity-40;
   }
 
-  /* Celebration Burst */
   .star-burst {
     position: absolute;
     animation: burst-out 1s ease-out forwards;
@@ -127,35 +134,12 @@
     to { background-position: 200% center; }
   }
 
-  /* Accessibility focus states - high visibility for seniors */
   button:focus-visible, a:focus-visible, input:focus-visible {
     @apply outline-none ring-8 ring-emerald-500 ring-offset-4 ring-offset-slate-950 rounded-lg;
     z-index: 50;
   }
-  
-  .light-theme button:focus-visible {
-    @apply ring-offset-slate-50;
-  }
-
-  /* Custom touch-friendly scrollbar */
-  ::-webkit-scrollbar {
-    width: 12px;
-  }
-  ::-webkit-scrollbar-track {
-    @apply bg-slate-900;
-  }
-  .light-theme ::-webkit-scrollbar-track {
-    @apply bg-slate-200;
-  }
-  ::-webkit-scrollbar-thumb {
-    @apply bg-slate-700 rounded-full border-4 border-slate-900;
-  }
-  .light-theme ::-webkit-scrollbar-thumb {
-    @apply bg-slate-400 border-slate-200;
-  }
 }
 
-/* Range input styling for large fingers */
 input[type=range] {
   -webkit-appearance: none;
   background: transparent;
