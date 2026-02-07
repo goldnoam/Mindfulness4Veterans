@@ -14,6 +14,8 @@ import SoundMeditationExercise from './components/SoundMeditationExercise';
 import MindfulPhotosExercise from './components/MindfulPhotosExercise';
 import WellnessExercise from './components/WellnessExercise';
 import LandscapesExercise from './components/LandscapesExercise';
+import KindnessExercise from './components/KindnessExercise';
+import MorningExercise from './components/MorningExercise';
 import HistoryView from './components/HistoryView';
 import NewsCard from './components/NewsCard';
 import { ExerciseType } from './types';
@@ -70,8 +72,11 @@ const App: React.FC = () => {
 
   const exercises = [
     { id: ExerciseType.BREATHING, ...t.breathing, color: 'border-emerald-500', bg: 'bg-emerald-500/10' },
+    { id: ExerciseType.SOUND_MEDITATION, ...t.soundMed, color: 'border-violet-500', bg: 'bg-violet-500/10' },
     { id: ExerciseType.LANDSCAPES, ...t.landscapes, color: 'border-emerald-300', bg: 'bg-emerald-300/10' },
     { id: ExerciseType.VISUALIZATION, ...t.visualization, color: 'border-cyan-500', bg: 'bg-cyan-500/10' },
+    { id: 'KINDNESS', ...t.kindness, color: 'border-rose-500', bg: 'bg-rose-500/10' },
+    { id: 'MORNING', ...t.morning, color: 'border-amber-400', bg: 'bg-amber-400/10' },
     { id: ExerciseType.WELLNESS, ...t.wellness, color: 'border-emerald-400', bg: 'bg-emerald-400/10' },
     { id: ExerciseType.SENSES, ...t.senses, color: 'border-blue-500', bg: 'bg-blue-500/10' },
     { id: ExerciseType.GRATITUDE, ...t.gratitude, color: 'border-amber-500', bg: 'bg-amber-500/10' },
@@ -80,12 +85,10 @@ const App: React.FC = () => {
     { id: ExerciseType.MINDFUL_EATING, ...t.eating, color: 'border-orange-500', bg: 'bg-orange-500/10' },
     { id: ExerciseType.WALKING_MEDITATION, ...t.walking, color: 'border-lime-500', bg: 'bg-lime-500/10' },
     { id: ExerciseType.MINDFUL_MOVEMENT, ...t.movement, color: 'border-teal-500', bg: 'bg-teal-500/10' },
-    { id: ExerciseType.SOUND_MEDITATION, ...t.soundMed, color: 'border-violet-500', bg: 'bg-violet-500/10' },
     { id: ExerciseType.MINDFUL_PHOTOS, ...t.photos, color: 'border-slate-500', bg: 'bg-slate-500/10' },
   ];
 
   const onExerciseComplete = () => setCurrentView(ExerciseType.HOME);
-
   const isExerciseActive = currentView !== ExerciseType.HOME && currentView !== ExerciseType.HISTORY;
 
   const renderContent = () => {
@@ -102,6 +105,18 @@ const App: React.FC = () => {
         return (
           <Layout title={t.breathing.title} onBack={() => setCurrentView(ExerciseType.HOME)} isExerciseActive={isExerciseActive}>
             <BreathingExercise onComplete={onExerciseComplete} />
+          </Layout>
+        );
+      case 'KINDNESS' as any:
+        return (
+          <Layout title={t.kindness.title} onBack={() => setCurrentView(ExerciseType.HOME)} isExerciseActive={isExerciseActive}>
+            <KindnessExercise onComplete={onExerciseComplete} />
+          </Layout>
+        );
+      case 'MORNING' as any:
+        return (
+          <Layout title={t.morning.title} onBack={() => setCurrentView(ExerciseType.HOME)} isExerciseActive={isExerciseActive}>
+            <MorningExercise onComplete={onExerciseComplete} />
           </Layout>
         );
       case ExerciseType.WELLNESS:
@@ -177,16 +192,16 @@ const App: React.FC = () => {
           <Layout title={t.title} isExerciseActive={false}>
             <div className="flex flex-col gap-8 w-full px-4 max-w-lg pb-10">
               <div className="flex items-center gap-4">
-                <div className={`flex-1 bg-slate-900 border-4 ${showStarCelebration ? 'border-amber-500 scale-105' : 'border-slate-800'} rounded-[40px] p-6 shadow-xl flex flex-col items-center transition-all duration-500`}>
+                <div className={`flex-1 bg-slate-900 border-4 ${showStarCelebration ? 'border-amber-500 scale-105 shadow-[0_0_20px_rgba(245,158,11,0.2)]' : 'border-slate-800'} rounded-[40px] p-6 shadow-xl flex flex-col items-center transition-all duration-500`}>
                    <div className="flex items-center gap-4">
                       <span className="text-6xl" role="img" aria-label="star" key={stars}>⭐</span>
-                      <span className={`text-5xl font-bold ${showStarCelebration ? 'text-amber-400 scale-125' : 'text-emerald-400'}`}>{stars}</span>
+                      <span className={`text-5xl font-black ${showStarCelebration ? 'text-amber-400' : 'text-emerald-400'}`}>{stars}</span>
                    </div>
                    <p className="text-xl text-slate-400 font-bold mt-2 text-center">{t.stars}</p>
                 </div>
                 <button 
-                  onClick={() => setCurrentView(ExerciseType.HISTORY)}
-                  className="bg-slate-800 border-4 border-slate-700 p-6 rounded-[40px] text-4xl shadow-xl active:scale-95"
+                  onClick={() => { ttsService.speak(t.history); setCurrentView(ExerciseType.HISTORY); }}
+                  className="bg-slate-800 border-4 border-slate-700 p-6 rounded-[40px] text-4xl shadow-xl active:scale-95 focus-visible:ring-emerald-400"
                   aria-label={t.history}
                 >
                   📜
@@ -194,29 +209,45 @@ const App: React.FC = () => {
               </div>
 
               <div className="relative flex items-center justify-center">
-                 <button onClick={() => setCarouselIndex((carouselIndex - 1 + exercises.length) % exercises.length)} className="absolute -left-4 z-20 bg-slate-800 border-2 border-slate-700 w-16 h-16 rounded-full flex items-center justify-center text-3xl shadow-2xl active:scale-90">
-                   {lang === 'he' ? '➡️' : '⬅️'}
+                 <button 
+                  onClick={() => setCarouselIndex((carouselIndex - 1 + exercises.length) % exercises.length)} 
+                  className="absolute -left-6 md:-left-12 z-20 bg-slate-800 border-4 border-emerald-500/40 w-20 h-20 md:w-24 md:h-24 rounded-full flex flex-col items-center justify-center text-4xl shadow-2xl active:scale-90 focus-visible:ring-emerald-400 transition-all hover:bg-slate-700"
+                  aria-label="Previous Exercise"
+                 >
+                   <span>{lang === 'he' ? '➡️' : '⬅️'}</span>
+                   <span className="text-[10px] font-black uppercase text-emerald-500/70">{lang === 'he' ? 'עוד' : 'More'}</span>
                  </button>
 
                  <div className="w-full">
                     <button 
-                      onClick={() => setCurrentView(currentExercise.id)}
-                      className={`w-full bg-slate-900 border-4 ${currentExercise.color} p-8 rounded-[48px] shadow-2xl active:scale-95 flex flex-col items-center text-center transition-all`}
+                      onClick={() => setCurrentView(currentExercise.id as any)}
+                      className={`w-full bg-slate-900 border-4 ${currentExercise.color} p-8 rounded-[48px] shadow-2xl active:scale-95 flex flex-col items-center text-center transition-all focus-visible:ring-emerald-400 group relative overflow-hidden`}
                     >
-                      <div className={`p-8 rounded-full text-7xl mb-6 ${currentExercise.bg}`}>
+                      <div className={`p-8 rounded-full text-7xl mb-6 ${currentExercise.bg} group-hover:scale-110 transition-transform relative z-10`}>
                         {currentExercise.icon}
                       </div>
-                      <h2 className="text-4xl font-bold mb-3 text-white">{currentExercise.title}</h2>
-                      <p className="text-2xl text-slate-400 font-medium">{currentExercise.desc}</p>
-                      <div className="mt-8 bg-emerald-600 text-white text-2xl font-bold py-4 px-10 rounded-2xl shadow-lg">
+                      <h2 className="text-4xl font-black mb-3 text-white relative z-10">{currentExercise.title}</h2>
+                      <p className="text-2xl text-slate-400 font-bold relative z-10">{currentExercise.desc}</p>
+                      <div className="mt-8 bg-emerald-600 text-white text-3xl font-black py-5 px-12 rounded-[28px] shadow-xl border-b-8 border-emerald-800 transition-all relative z-10">
                         {t.start}
                       </div>
                     </button>
                  </div>
 
-                 <button onClick={() => setCarouselIndex((carouselIndex + 1) % exercises.length)} className="absolute -right-4 z-20 bg-slate-800 border-2 border-slate-700 w-16 h-16 rounded-full flex items-center justify-center text-3xl shadow-2xl active:scale-90">
-                   {lang === 'he' ? '⬅️' : '➡️'}
+                 <button 
+                  onClick={() => setCarouselIndex((carouselIndex + 1) % exercises.length)} 
+                  className="absolute -right-6 md:-right-12 z-20 bg-slate-800 border-4 border-emerald-500/40 w-20 h-20 md:w-24 md:h-24 rounded-full flex flex-col items-center justify-center text-4xl shadow-2xl active:scale-90 focus-visible:ring-emerald-400 transition-all hover:bg-slate-700"
+                  aria-label="Next Exercise"
+                 >
+                   <span>{lang === 'he' ? '⬅️' : '➡️'}</span>
+                   <span className="text-[10px] font-black uppercase text-emerald-500/70">{lang === 'he' ? 'עוד' : 'More'}</span>
                  </button>
+              </div>
+
+              <div className="flex justify-center gap-3">
+                 {exercises.map((_, i) => (
+                   <div key={i} className={`h-3 rounded-full transition-all duration-300 ${i === carouselIndex ? 'w-10 bg-emerald-500' : 'w-3 bg-slate-800'}`}></div>
+                 ))}
               </div>
 
               <NewsCard />

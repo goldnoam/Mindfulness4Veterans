@@ -15,6 +15,7 @@ type Scene = 'beach' | 'forest' | 'meadow';
 
 const scenes: Record<Scene, any> = {
   beach: {
+    key: 'beach',
     titleHe: 'חוף הים',
     titleEn: 'The Beach',
     icon: '🏖️',
@@ -34,6 +35,7 @@ const scenes: Record<Scene, any> = {
     ]
   },
   forest: {
+    key: 'forest',
     titleHe: 'יער ירוק',
     titleEn: 'Green Forest',
     icon: '🌲',
@@ -53,6 +55,7 @@ const scenes: Record<Scene, any> = {
     ]
   },
   meadow: {
+    key: 'meadow',
     titleHe: 'מרחב פתוח',
     titleEn: 'Open Meadow',
     icon: '🌻',
@@ -74,57 +77,56 @@ const scenes: Record<Scene, any> = {
 };
 
 const VisualizationExercise: React.FC<Props> = ({ onComplete }) => {
-  const [step, setStep] = useState<'setup' | 'active'>('setup');
+  const [step, setStep] = useState<'setup' | 'transitioning' | 'active'>('setup');
   const [isFinished, setIsFinished] = useState(false);
-  const [selectedScene, setSelectedScene] = useState<Scene>('beach');
+  const [carouselIndex, setCarouselIndex] = useState(0);
   const [durationMins, setDurationMins] = useState(2);
   const [timeLeft, setTimeLeft] = useState(0);
   const timerRef = useRef<number | null>(null);
 
   const lang = (localStorage.getItem('lang') as Language) || 'he';
   const t = translations[lang] || translations['he'];
+  const sceneKeys = Object.keys(scenes) as Scene[];
+  const selectedScene = scenes[sceneKeys[carouselIndex]];
 
   const startExercise = () => {
-    const totalSeconds = durationMins * 60;
-    setTimeLeft(totalSeconds);
-    setStep('active');
-
-    const sceneData = scenes[selectedScene];
-    const title = lang === 'he' ? sceneData.titleHe : sceneData.titleEn;
+    setStep('transitioning');
     
-    ambientService.setMode(sceneData.ambientMode);
-    
-    ttsService.speak(lang === 'he' ? `בואו נצא למסע דמיוני אל ${title}. עיצמו עיניים בנחת.` : `Let's go on an imaginary journey to ${title}. Close your eyes gently.`);
+    // Smooth transition effect
+    setTimeout(() => {
+      const totalSeconds = durationMins * 60;
+      setTimeLeft(totalSeconds);
+      setStep('active');
 
-    if (timerRef.current) clearInterval(timerRef.current);
-    timerRef.current = window.setInterval(() => {
-      setTimeLeft((prev) => {
-        if (prev <= 1) {
-          handleFinish();
-          return 0;
-        }
+      const title = lang === 'he' ? selectedScene.titleHe : selectedScene.titleEn;
+      ambientService.setMode(selectedScene.ambientMode);
+      
+      ttsService.speak(lang === 'he' ? `בואו נצא למסע דמיוני אל ${title}. עיצמו עיניים בנחת.` : `Let's go on an imaginary journey to ${title}. Close your eyes gently.`);
 
-        const totalSeconds = durationMins * 60;
-        const progress = (totalSeconds - prev) / totalSeconds;
-        const prompts = lang === 'he' ? sceneData.promptsHe : sceneData.promptsEn;
-        
-        if (prev === totalSeconds - 10) {
-          ttsService.speak(lang === 'he' ? sceneData.descriptionHe : sceneData.descriptionEn);
-        } else if (Math.abs(progress - 0.4) < 0.01) {
-          ttsService.speak(prompts[0]);
-        } else if (Math.abs(progress - 0.7) < 0.01) {
-          ttsService.speak(prompts[1]);
-        }
+      if (timerRef.current) clearInterval(timerRef.current);
+      timerRef.current = window.setInterval(() => {
+        setTimeLeft((prev) => {
+          if (prev <= 1) {
+            handleFinish();
+            return 0;
+          }
 
-        return prev - 1;
-      });
-    }, 1000);
-  };
+          const totalSeconds = durationMins * 60;
+          const progress = (totalSeconds - prev) / totalSeconds;
+          const prompts = lang === 'he' ? selectedScene.promptsHe : selectedScene.promptsEn;
+          
+          if (prev === totalSeconds - 10) {
+            ttsService.speak(lang === 'he' ? selectedScene.descriptionHe : selectedScene.descriptionEn);
+          } else if (Math.abs(progress - 0.4) < 0.01) {
+            ttsService.speak(prompts[0]);
+          } else if (Math.abs(progress - 0.7) < 0.01) {
+            ttsService.speak(prompts[1]);
+          }
 
-  const restartExercise = () => {
-    if (timerRef.current) clearInterval(timerRef.current);
-    ttsService.stop();
-    startExercise();
+          return prev - 1;
+        });
+      }, 1000);
+    }, 600);
   };
 
   const handleFinish = () => {
@@ -158,78 +160,108 @@ const VisualizationExercise: React.FC<Props> = ({ onComplete }) => {
 
   if (isFinished) return <CelebrationOverlay onComplete={onComplete} />;
 
-  if (step === 'setup') {
+  if (step === 'setup' || step === 'transitioning') {
     return (
-      <div className="bg-slate-900 p-8 rounded-[48px] shadow-2xl border-4 border-cyan-500/30 w-full max-w-lg text-center">
-        <h3 className="text-3xl font-bold text-cyan-400 mb-6 underline decoration-cyan-500/20">{lang === 'he' ? 'לאן נטייל היום?' : 'Where shall we travel?'}</h3>
-        
-        <div className="grid grid-cols-3 gap-3 mb-8">
-          {(Object.keys(scenes) as Scene[]).map((key) => (
-            <button
-              key={key}
-              onClick={() => setSelectedScene(key)}
-              className={`flex flex-col items-center p-4 rounded-3xl border-4 transition-all ${
-                selectedScene === key ? 'border-cyan-500 bg-cyan-900/40 scale-105 shadow-xl' : 'border-slate-800 bg-slate-900/40'
-              }`}
+      <div className={`transition-all duration-700 transform ${step === 'transitioning' ? 'opacity-0 scale-90 blur-sm' : 'opacity-100 scale-100'}`}>
+        <div className="bg-slate-900 p-8 rounded-[48px] shadow-2xl border-4 border-cyan-500/30 w-full max-w-lg text-center">
+          <h3 className="text-3xl font-black text-cyan-400 mb-8 uppercase tracking-wide">
+            {lang === 'he' ? 'לאן נטייל היום?' : 'Where shall we travel?'}
+          </h3>
+          
+          <div className="relative flex items-center justify-center mb-10 group">
+            <button 
+              onClick={() => setCarouselIndex((carouselIndex - 1 + sceneKeys.length) % sceneKeys.length)}
+              className="absolute -left-6 md:-left-10 z-10 bg-slate-800 border-4 border-cyan-500/50 w-20 h-20 rounded-full flex flex-col items-center justify-center text-4xl shadow-2xl active:scale-90 focus-visible:ring-cyan-400 transition-all hover:bg-slate-700"
+              aria-label="Previous Scene"
             >
-              <span className="text-5xl mb-2">{scenes[key].icon}</span>
-              <span className="text-lg font-bold text-slate-200">{lang === 'he' ? scenes[key].titleHe : scenes[key].titleEn}</span>
+              <span>{lang === 'he' ? '➡️' : '⬅️'}</span>
+              <span className="text-[10px] font-black uppercase text-cyan-500/70">{lang === 'he' ? 'עוד' : 'More'}</span>
             </button>
-          ))}
-        </div>
 
-        <div className="mb-8">
-          <p className="text-2xl font-bold text-slate-300 mb-4">{t.duration}: {durationMins} {t.min}</p>
-          <div className="flex flex-col gap-4">
-            {[1, 2, 5].map(m => (
-              <button 
-                key={m}
-                onClick={() => setDurationMins(m)}
-                className={`text-2xl font-bold py-4 rounded-2xl border-4 transition-all ${durationMins === m ? 'bg-cyan-600 border-cyan-400 text-white' : 'bg-slate-800 border-slate-700 text-slate-400'}`}
-              >
-                {m} {t.min}
-              </button>
-            ))}
+            <div className={`p-10 rounded-full transition-all duration-500 ${selectedScene.color} shadow-[0_0_60px_rgba(6,182,212,0.4)] transform hover:scale-105`}>
+               <span className="text-[100px] leading-none drop-shadow-xl select-none" role="img" aria-label="Scene Icon">{selectedScene.icon}</span>
+            </div>
+
+            <button 
+              onClick={() => setCarouselIndex((carouselIndex + 1) % sceneKeys.length)}
+              className="absolute -right-6 md:-right-10 z-10 bg-slate-800 border-4 border-cyan-500/50 w-20 h-20 rounded-full flex flex-col items-center justify-center text-4xl shadow-2xl active:scale-90 focus-visible:ring-cyan-400 transition-all hover:bg-slate-700"
+              aria-label="Next Scene"
+            >
+              <span>{lang === 'he' ? '⬅️' : '➡️'}</span>
+              <span className="text-[10px] font-black uppercase text-cyan-500/70">{lang === 'he' ? 'עוד' : 'More'}</span>
+            </button>
+
+            {/* Tooltip for seniors */}
+            <div className="absolute -bottom-10 bg-cyan-900/80 text-cyan-100 px-4 py-1 rounded-full text-sm font-black animate-bounce">
+              {lang === 'he' ? 'לחצו על החיצים כדי להחליף מקום' : 'Click arrows to change location'}
+            </div>
           </div>
-        </div>
 
-        <button 
-          onClick={startExercise}
-          className="w-full bg-cyan-600 text-white text-3xl font-bold py-6 rounded-3xl shadow-xl active:scale-95 transition-all border-b-8 border-cyan-800"
-        >
-          {t.start}
-        </button>
+          <h4 className="text-4xl font-black text-white mb-8">
+            {lang === 'he' ? selectedScene.titleHe : selectedScene.titleEn}
+          </h4>
+
+          <div className="mb-10">
+            <p className="text-2xl font-bold text-slate-400 mb-4 tracking-widest uppercase">{t.duration}</p>
+            <div className="flex gap-4 justify-center">
+              {[1, 2, 5].map(m => (
+                <button 
+                  key={m}
+                  onClick={() => { setDurationMins(m); ttsService.speak(`${m} ${t.min}`); }}
+                  className={`flex-1 text-2xl font-black py-5 rounded-3xl border-4 transition-all active:scale-95 ${durationMins === m ? 'bg-cyan-600 border-cyan-400 text-white shadow-xl scale-105' : 'bg-slate-800 border-slate-700 text-slate-500'}`}
+                >
+                  {m} {t.min}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <button 
+            onClick={startExercise}
+            className="w-full bg-cyan-600 text-white text-4xl font-black py-8 rounded-[36px] shadow-2xl active:scale-95 transition-all border-b-[12px] border-cyan-800 hover:bg-cyan-500"
+          >
+            {t.start}
+          </button>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="flex flex-col items-center gap-8 w-full max-w-lg text-center">
-      <div className="flex items-center justify-between w-full px-6">
-          <div className="bg-slate-800 px-6 py-2 rounded-2xl border-2 border-cyan-500/30 text-3xl font-bold text-cyan-400 tabular-nums shadow-lg">
+    <div className="flex flex-col items-center gap-10 w-full max-w-lg text-center animate-in fade-in zoom-in duration-700 px-4">
+      <div className="flex items-center justify-between w-full">
+          <div className="bg-slate-800 px-8 py-3 rounded-2xl border-4 border-cyan-500/30 text-3xl font-black text-cyan-400 tabular-nums shadow-2xl">
             {formatTime(timeLeft)}
           </div>
           <MuteToggle />
       </div>
 
-      <div className={`w-64 h-64 rounded-full flex items-center justify-center border-8 border-slate-800 shadow-[0_0_50px_rgba(6,182,212,0.3)] ${scenes[selectedScene].color} animate-pulse transition-all duration-1000`}>
-        <span className="text-[120px]">{scenes[selectedScene].icon}</span>
+      <div className="relative group">
+        <div className={`absolute inset-0 rounded-full blur-[80px] opacity-30 animate-pulse ${selectedScene.color}`}></div>
+        <div className={`w-72 h-72 rounded-full flex items-center justify-center border-8 border-white/20 shadow-2xl transition-all duration-1000 transform hover:scale-105 ${selectedScene.color}`}>
+          <span className="text-[140px] leading-none drop-shadow-2xl animate-bounce" style={{ animationDuration: '4s' }}>{selectedScene.icon}</span>
+        </div>
       </div>
       
       <div>
-        <h3 className="text-4xl font-bold text-cyan-400 mb-2">{lang === 'he' ? scenes[selectedScene].titleHe : scenes[selectedScene].titleEn}</h3>
+        <h3 className="text-5xl font-black text-white drop-shadow-sm mb-2">
+          {lang === 'he' ? selectedScene.titleHe : selectedScene.titleEn}
+        </h3>
+        <p className="text-2xl font-bold text-cyan-400 animate-pulse tracking-widest uppercase">
+          {lang === 'he' ? 'דמיינו את השלווה...' : 'Imagine the peace...'}
+        </p>
       </div>
 
-      <div className="flex flex-col gap-4 items-center">
+      <div className="flex flex-col gap-4 items-center w-full max-w-xs">
         <button 
-          onClick={restartExercise}
-          className="bg-slate-800 border-4 border-cyan-500/50 text-cyan-400 px-10 py-4 rounded-3xl text-2xl font-bold shadow-xl active:scale-95 transition-all"
+          onClick={() => { ttsService.stop(); startExercise(); }}
+          className="w-full bg-slate-800 border-4 border-cyan-500/50 text-cyan-400 px-10 py-5 rounded-3xl text-2xl font-black shadow-xl active:scale-95 transition-all hover:bg-slate-700"
         >
           🔄 {t.restart}
         </button>
         <button 
           onClick={stopEarly}
-          className="text-2xl text-cyan-400 underline font-bold mt-4"
+          className="text-2xl text-cyan-400 underline font-black mt-4 hover:text-cyan-300 transition-colors"
         >
           {t.back}
         </button>

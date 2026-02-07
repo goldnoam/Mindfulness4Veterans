@@ -60,13 +60,13 @@ const LandscapesExercise: React.FC<Props> = ({ onComplete }) => {
 
   if (step === 'setup') {
     return (
-      <div className="bg-slate-900 p-10 rounded-[48px] shadow-2xl border-4 border-emerald-500/30 w-full max-w-lg text-center">
-        <div className="text-8xl mb-6">🖼️</div>
-        <h3 className="text-4xl font-black text-white mb-6">{t.landscapes.title}</h3>
-        <p className="text-2xl text-slate-300 mb-10 leading-relaxed">
+      <div className="bg-slate-900 p-8 md:p-10 rounded-[48px] shadow-2xl border-4 border-emerald-500/30 w-full max-w-lg text-center mx-4">
+        <div className="text-6xl md:text-8xl mb-6">🖼️</div>
+        <h3 className="text-3xl md:text-4xl font-black text-white mb-6">{t.landscapes.title}</h3>
+        <p className="text-xl md:text-2xl text-slate-300 mb-10 leading-relaxed">
           {lang === 'he' ? 'צפייה בתמונות טבע מרהיבות להורדת רמת המתח והעלאת מצב הרוח.' : 'View beautiful nature images to lower stress and lift your mood.'}
         </p>
-        <button onClick={startExercise} className="w-full bg-emerald-600 text-white text-3xl font-bold py-6 rounded-3xl shadow-xl border-b-8 border-emerald-800">
+        <button onClick={startExercise} className="w-full bg-emerald-600 text-white text-3xl font-bold py-6 rounded-3xl shadow-xl border-b-8 border-emerald-800 active:scale-95 transition-all">
           {t.start}
         </button>
       </div>
@@ -74,49 +74,58 @@ const LandscapesExercise: React.FC<Props> = ({ onComplete }) => {
   }
 
   return (
-    <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center p-2">
-      <div className="relative w-full h-full max-w-6xl rounded-[40px] overflow-hidden shadow-2xl group">
+    <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-center">
+      <div className="relative w-full h-full flex flex-col group">
         <img 
           src={landscapeImages[currentIndex].url} 
           alt="Landscape" 
-          className="w-full h-full object-cover transition-opacity duration-1000"
+          className="absolute inset-0 w-full h-full object-cover transition-opacity duration-1000"
         />
         
-        <div className="absolute top-6 left-6 right-6 flex justify-between items-center pointer-events-none">
+        {/* Top Controls Overlay */}
+        <div className="absolute top-0 left-0 right-0 p-4 flex flex-wrap items-center justify-between gap-3 bg-gradient-to-b from-black/70 to-transparent z-10">
           <button 
             onClick={() => setStep('setup')}
-            className="pointer-events-auto bg-black/50 backdrop-blur-md text-white px-8 py-4 rounded-2xl font-bold border-2 border-white/20 active:scale-90"
+            className="flex-shrink-0 bg-black/50 backdrop-blur-md text-white px-6 py-3 rounded-2xl font-bold border-2 border-white/20 active:scale-90 text-xl"
           >
             {t.back}
           </button>
-          <div className="pointer-events-auto flex items-center gap-4 bg-black/50 backdrop-blur-md p-2 rounded-2xl border-2 border-white/20">
-             <span className="text-white font-bold px-4">{isAuto ? (lang === 'he' ? 'מצב אוטומטי' : 'Auto Mode') : (lang === 'he' ? 'מצב ידני' : 'Manual')}</span>
-             <button onClick={() => setIsAuto(!isAuto)} className={`w-14 h-14 flex items-center justify-center rounded-xl text-2xl transition-all ${isAuto ? 'bg-emerald-500' : 'bg-slate-700'}`}>
+          
+          <div className="flex items-center gap-3 bg-black/50 backdrop-blur-md p-2 rounded-2xl border-2 border-white/20">
+             <span className="hidden sm:inline text-white font-bold px-2">{isAuto ? (lang === 'he' ? 'אוטומטי' : 'Auto') : (lang === 'he' ? 'ידני' : 'Manual')}</span>
+             <button onClick={() => setIsAuto(!isAuto)} className={`w-12 h-12 flex items-center justify-center rounded-xl text-xl transition-all ${isAuto ? 'bg-emerald-500 shadow-[0_0_15px_rgba(16,185,129,0.5)]' : 'bg-slate-700'}`}>
                 {isAuto ? '⏸️' : '▶️'}
              </button>
           </div>
         </div>
 
+        {/* Navigation Arrows - Accessible on tablet/mobile via touch */}
         <button 
           onClick={handlePrev} 
-          className="absolute left-4 top-1/2 -translate-y-1/2 w-20 h-20 bg-black/30 hover:bg-black/60 rounded-full flex items-center justify-center text-4xl text-white transition-all opacity-0 group-hover:opacity-100"
+          className="absolute left-2 md:left-4 top-1/2 -translate-y-1/2 w-16 h-16 md:w-20 md:h-20 bg-black/40 hover:bg-black/60 rounded-full flex items-center justify-center text-3xl md:text-4xl text-white transition-all z-20 active:scale-90"
+          aria-label="Previous Landscape"
         >
           {lang === 'he' ? '➡️' : '⬅️'}
         </button>
         <button 
           onClick={handleNext} 
-          className="absolute right-4 top-1/2 -translate-y-1/2 w-20 h-20 bg-black/30 hover:bg-black/60 rounded-full flex items-center justify-center text-4xl text-white transition-all opacity-0 group-hover:opacity-100"
+          className="absolute right-2 md:right-4 top-1/2 -translate-y-1/2 w-16 h-16 md:w-20 md:h-20 bg-black/40 hover:bg-black/60 rounded-full flex items-center justify-center text-3xl md:text-4xl text-white transition-all z-20 active:scale-90"
+          aria-label="Next Landscape"
         >
           {lang === 'he' ? '⬅️' : '➡️'}
         </button>
 
-        <div className="absolute bottom-10 left-10 right-10 flex flex-col items-center gap-6">
-          <div className="bg-black/60 backdrop-blur-lg px-10 py-5 rounded-[32px] border-2 border-white/30">
-            <p className="text-2xl md:text-3xl font-black text-white text-center">
+        {/* Bottom Label and Finish Button Overlay */}
+        <div className="absolute bottom-0 left-0 right-0 p-6 flex flex-col items-center gap-4 bg-gradient-to-t from-black/70 via-black/40 to-transparent z-10">
+          <div className="bg-black/60 backdrop-blur-lg px-6 py-3 md:px-10 md:py-5 rounded-[24px] md:rounded-[32px] border-2 border-white/30 max-w-[90%]">
+            <p className="text-xl md:text-3xl font-black text-white text-center leading-tight">
               {lang === 'he' ? landscapeImages[currentIndex].labelHe : landscapeImages[currentIndex].labelEn}
             </p>
           </div>
-          <button onClick={handleFinish} className="bg-emerald-600 text-white text-3xl font-black py-6 px-16 rounded-[40px] shadow-2xl border-b-8 border-emerald-800 active:scale-95">
+          <button 
+            onClick={handleFinish} 
+            className="w-full sm:w-auto min-w-[200px] bg-emerald-600 text-white text-2xl md:text-3xl font-black py-4 md:py-6 px-12 rounded-[32px] md:rounded-[40px] shadow-2xl border-b-8 border-emerald-800 active:scale-95 transition-all"
+          >
             {t.done}
           </button>
         </div>

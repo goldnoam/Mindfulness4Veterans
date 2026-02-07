@@ -2,8 +2,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ttsService } from '../services/ttsService';
 import { statsService } from '../services/statsService';
+import { ambientService, AmbientSoundMode } from '../services/ambientService';
 import CelebrationOverlay from './CelebrationOverlay';
 import MuteToggle from './MuteToggle';
+import AmbientSelector from './AmbientSelector';
+import MusicPlayer from './MusicPlayer';
 import { Language, translations } from '../translations';
 
 interface Props {
@@ -31,11 +34,11 @@ const SoundMeditationExercise: React.FC<Props> = ({ onComplete }) => {
   const [isFinished, setIsFinished] = useState(false);
   const [timeLeft, setTimeLeft] = useState(0);
   const [durationMins, setDurationMins] = useState(3);
-  const [currentPromptIdx, setCurrentPromptIdx] = useState(0);
+  const [currentPromptIdx, setCurrentPromptIdx] = useState(-1);
   const [isSpeaking, setIsSpeaking] = useState(false);
   
   const timerRef = useRef<number | null>(null);
-  const currentIdxRef = useRef<number>(0);
+  const currentIdxRef = useRef<number>(-1);
 
   const lang = (localStorage.getItem('lang') as Language) || 'he';
   const t = translations[lang] || translations['he'];
@@ -46,12 +49,12 @@ const SoundMeditationExercise: React.FC<Props> = ({ onComplete }) => {
     const totalSecs = mins * 60;
     setTimeLeft(totalSecs);
     setIsActive(true);
-    currentIdxRef.current = -1; // Reset ref
+    currentIdxRef.current = -1;
     setCurrentPromptIdx(-1);
 
     const initialGreeting = lang === 'he' 
-      ? "מדיטציית צליל. עצמו עיניים והתמקדו בשמיעה. בין ההנחיות יהיה זמן שקט להקשבה." 
-      : "Sound meditation. Close your eyes and focus on your hearing. Between prompts, there will be silent time for listening.";
+      ? "מדיטציית צליל. אתם יכולים לבחור צלילי רקע מרגיעים כאן למטה. עצמו עיניים והתמקדו בשמיעה." 
+      : "Sound meditation. You can choose relaxing ambient sounds below. Close your eyes and focus on your hearing.";
     
     setIsSpeaking(true);
     ttsService.speak(initialGreeting, () => setIsSpeaking(false));
@@ -69,7 +72,6 @@ const SoundMeditationExercise: React.FC<Props> = ({ onComplete }) => {
         const elapsed = (mins * 60) - prev;
         const newIdx = Math.floor(elapsed / intervalSecs);
 
-        // ONLY trigger if the index has changed and is within bounds
         if (newIdx < activePrompts.length && newIdx !== currentIdxRef.current) {
           currentIdxRef.current = newIdx;
           setCurrentPromptIdx(newIdx);
@@ -86,6 +88,7 @@ const SoundMeditationExercise: React.FC<Props> = ({ onComplete }) => {
 
   const handleFinish = () => {
     if (timerRef.current) clearInterval(timerRef.current);
+    ambientService.setMode('off');
     statsService.addStar();
     statsService.addToHistory(t.soundMed.title, '🎧', durationMins * 60);
     setIsFinished(true);
@@ -100,6 +103,7 @@ const SoundMeditationExercise: React.FC<Props> = ({ onComplete }) => {
   const stopEarly = () => {
     if (timerRef.current) clearInterval(timerRef.current);
     ttsService.stop();
+    ambientService.setMode('off');
     setIsActive(false);
   };
 
@@ -113,64 +117,90 @@ const SoundMeditationExercise: React.FC<Props> = ({ onComplete }) => {
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
       ttsService.stop();
+      ambientService.setMode('off');
     };
   }, []);
 
   if (isFinished) return <CelebrationOverlay onComplete={onComplete} />;
 
   return (
-    <div className="flex flex-col items-center gap-8 w-full max-w-lg">
+    <div className="flex flex-col items-center gap-8 w-full max-w-2xl px-4">
       {!isActive ? (
-        <div className="bg-slate-900 p-10 rounded-[48px] shadow-2xl border-4 border-violet-500/30 text-center w-full">
-          <div className="text-7xl mb-6" aria-hidden="true">🎧</div>
-          <h3 className="text-3xl font-bold text-white mb-8">{t.selectDuration}</h3>
-          <div className="flex flex-col gap-4">
-            {[2, 5, 10].map(m => (
-              <button 
-                key={m}
-                onClick={() => startExercise(m)}
-                className="bg-violet-600 text-white text-3xl font-bold py-6 rounded-3xl shadow-xl active:scale-95 border-b-8 border-violet-800"
-              >
-                {m} {t.min}
-              </button>
-            ))}
+        <div className="bg-slate-900 p-10 rounded-[56px] shadow-2xl border-4 border-violet-500/30 text-center w-full">
+          <div className="text-8xl mb-6" aria-hidden="true">🎧</div>
+          <h3 className="text-4xl font-black text-white mb-8">{t.soundMed.title}</h3>
+          
+          <div className="flex flex-col gap-6 mb-10">
+            <p className="text-2xl font-bold text-slate-300">{t.selectDuration}</p>
+            <div className="flex flex-wrap gap-4 justify-center">
+              {[2, 5, 10].map(m => (
+                <button 
+                  key={m}
+                  onClick={() => { setDurationMins(m); ttsService.speak(`${m} ${t.min}`); }}
+                  className={`flex-1 min-w-[120px] text-2xl font-black py-5 rounded-3xl border-4 transition-all active:scale-95 ${durationMins === m ? 'bg-violet-600 border-violet-400 text-white shadow-xl' : 'bg-slate-800 border-slate-700 text-slate-400'}`}
+                >
+                  {m} {t.min}
+                </button>
+              ))}
+            </div>
           </div>
-          <p className="text-slate-500 mt-6 font-medium italic">
-            {lang === 'he' ? 'מומלץ להפעיל צלילי רקע בהגדרות' : 'Tip: Try turning on ambient sounds in the settings'}
-          </p>
+
+          <button 
+            onClick={() => startExercise(durationMins)}
+            className="w-full bg-violet-600 text-white text-4xl font-black py-8 rounded-[36px] shadow-2xl active:scale-95 border-b-[12px] border-violet-800 transition-all focus-visible:ring-violet-400"
+          >
+            {t.start}
+          </button>
         </div>
       ) : (
-        <div className="bg-slate-900 p-8 rounded-[48px] shadow-2xl border-4 border-violet-500/30 w-full text-center">
-          <div className="flex items-center justify-between mb-6">
-            <div className="bg-slate-800 px-4 py-2 rounded-xl text-2xl font-bold text-violet-400 tabular-nums border-2 border-violet-500/20">
+        <div className="bg-slate-900 p-8 rounded-[56px] shadow-2xl border-4 border-violet-500/30 w-full text-center flex flex-col items-center">
+          <div className="flex items-center justify-between w-full mb-8">
+            <div className="bg-slate-800 px-6 py-3 rounded-2xl text-3xl font-black text-violet-400 tabular-nums border-4 border-violet-500/20 shadow-lg">
               {formatTime(timeLeft)}
             </div>
             <MuteToggle />
           </div>
           
-          <div className="relative flex items-center justify-center h-48 mb-6">
-             <div className="absolute w-40 h-40 bg-violet-500/20 rounded-full animate-ping"></div>
-             <div className="absolute w-32 h-32 bg-violet-500/40 rounded-full animate-pulse"></div>
-             <div className="text-8xl z-10">{isSpeaking ? '🗣️' : '👂'}</div>
+          <div className="relative flex items-center justify-center h-48 mb-10">
+             <div className="absolute w-44 h-44 bg-violet-500/20 rounded-full animate-ping"></div>
+             <div className="absolute w-36 h-36 bg-violet-500/40 rounded-full animate-pulse"></div>
+             <div className="text-9xl z-10 transition-transform duration-500 scale-110" aria-hidden="true">
+               {isSpeaking ? '🗣️' : '👂'}
+             </div>
           </div>
 
-          <div className="h-32 flex flex-col items-center justify-center">
+          <div className="min-h-[140px] flex flex-col items-center justify-center px-4">
             {isSpeaking ? (
-               <p className="text-3xl leading-relaxed text-slate-100 italic transition-all duration-500">
+               <p className="text-3xl font-bold leading-relaxed text-slate-100 italic animate-in fade-in slide-in-from-bottom-2">
                 "{currentPromptIdx >= 0 ? activePrompts[currentPromptIdx] : ''}"
                </p>
             ) : (
-              <p className="text-4xl font-black text-violet-400 animate-pulse uppercase tracking-widest">
+              <p className="text-4xl font-black text-violet-400 animate-pulse tracking-widest uppercase">
                 {lang === 'he' ? 'פשוט להקשיב...' : 'Just listen...'}
               </p>
             )}
           </div>
 
-          <div className="flex flex-col gap-4 mt-8">
-            <button onClick={restartExercise} className="bg-slate-800 border-4 border-violet-500/50 text-violet-400 px-10 py-4 rounded-3xl text-2xl font-bold shadow-xl active:scale-95 transition-all">
+          <div className="w-full border-t-4 border-violet-500/10 my-10 pt-10 space-y-8">
+             <h4 className="text-2xl font-black text-violet-300 uppercase tracking-widest">{t.ambient}</h4>
+             <div className="flex flex-col md:flex-row gap-6 items-center justify-center">
+                <AmbientSelector />
+                <div className="w-1 h-12 bg-slate-800 hidden md:block"></div>
+                <MusicPlayer />
+             </div>
+          </div>
+
+          <div className="flex flex-col gap-4 mt-8 w-full max-w-sm">
+            <button 
+              onClick={restartExercise} 
+              className="bg-slate-800 border-4 border-violet-500/50 text-violet-400 px-10 py-5 rounded-3xl text-2xl font-black shadow-xl active:scale-95 transition-all focus-visible:ring-violet-400"
+            >
                🔄 {t.restart}
             </button>
-            <button onClick={stopEarly} className="text-2xl text-violet-400 underline font-bold mt-4">
+            <button 
+              onClick={stopEarly} 
+              className="text-2xl text-violet-400 underline font-black mt-4 hover:text-violet-300 transition-colors"
+            >
               {t.back}
             </button>
           </div>

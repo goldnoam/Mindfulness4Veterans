@@ -1,18 +1,20 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
-
-:root {
-  --app-font-scale: 1.1;
-}
 
 @layer base {
   html {
     @apply h-full overflow-x-hidden transition-colors duration-500;
     scroll-behavior: smooth;
-    font-size: calc(16px * var(--app-font-scale));
+    font-size: 18px; 
   }
+  
+  @screen md {
+    html {
+      font-size: 20px;
+    }
+  }
+
   body {
     @apply bg-slate-950 text-slate-50 antialiased overflow-x-hidden select-none min-h-screen transition-colors duration-500;
     font-family: 'Assistant', sans-serif;
@@ -22,9 +24,18 @@
     @apply bg-slate-50 text-slate-900;
   }
 
-  .font-scale-small { --app-font-scale: 0.95; }
-  .font-scale-medium { --app-font-scale: 1.15; }
-  .font-scale-large { --app-font-scale: 1.45; }
+  /* Accessibility focus states - high visibility for seniors */
+  button:focus-visible, 
+  a:focus-visible, 
+  input:focus-visible, 
+  [role="button"]:focus-visible {
+    @apply outline-none ring-8 ring-emerald-400 ring-offset-4 ring-offset-slate-950 rounded-xl;
+    z-index: 50;
+  }
+  
+  .light-theme button:focus-visible {
+    @apply ring-offset-slate-50 ring-emerald-600;
+  }
 }
 
 @layer utilities {
@@ -132,11 +143,6 @@
 
   @keyframes rainbow-shift {
     to { background-position: 200% center; }
-  }
-
-  button:focus-visible, a:focus-visible, input:focus-visible {
-    @apply outline-none ring-8 ring-emerald-500 ring-offset-4 ring-offset-slate-950 rounded-lg;
-    z-index: 50;
   }
 }
 
